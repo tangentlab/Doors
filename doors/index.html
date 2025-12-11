@@ -11,30 +11,22 @@
   <body>
     <a-scene>
       <a-assets>
-        <video id="videoBunny" preload="auto"
-               src="https://cdn.aframe.io/videos/bunny.mp4"
+        <video id="enterance" preload="auto"
+               src="../media/01_Entrance_11-25.mp4"
                width="160" height="90" autoplay loop="true"
-               crossOrigin="anonymous" muted></video>
-        <video id="videoFireworks" preload="auto"
-               src="https://cdn.aframe.io/videos/fireworks.mp4"
-               width="160" height="90" autoplay loop="true"
-               crossOrigin="anonymous" muted></video>
+               crossOrigin="anonymous">
+        </video>
       </a-assets>
-
-
-
     <a-videosphere
-      src="#videoBunny"
+      src="#enterance"
       radius="500"
       position="0 0 0"
       rotation="0 -90 0"
       play-on-click>
     </a-videosphere>
 
-
-
       <a-camera>
-        <a-entity
+        <!-- <a-entity
           position="0 0 -1.5"
           text="align: center;
                 width: 6;
@@ -42,7 +34,7 @@
                 color: black;
                 value: Click or tap to start video"
           hide-on-play="#videoFireworks">
-        </a-entity>
+        </a-entity> -->
       </a-camera>
 
     </a-scene>
