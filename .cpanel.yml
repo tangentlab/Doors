@@ -5,6 +5,7 @@ deployment:
     #- /bin/cp -R dist/* $DEPLOYPATH
      - /bin/cp -R aframe $DEPLOYPATH
      - /bin/cp -R doors $DEPLOYPATH
+     - /bin/cp -R media $DEPLOYPATH
      - /bin/cp -R js $DEPLOYPATH
 
 
