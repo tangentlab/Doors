@@ -1,10 +1,12 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/tqksxakd/public_html/
-    - set -e
-    - /bin/rm -rf $DEPLOYPATH/aframe $DEPLOYPATH/doors $DEPLOYPATH/media $DEPLOYPATH/js
-    - /bin/cp -R aframe $DEPLOYPATH
-    - /bin/cp -R doors $DEPLOYPATH
-    - /bin/cp -R media $DEPLOYPATH
-    - /bin/cp -R js $DEPLOYPATH
+    - export DEPLOYPATH=/home/tqksxakd/public_html
+    - set -euo pipefail
+    - /bin/mkdir -p "$DEPLOYPATH"
+
+    - /usr/bin/rsync -a --delete \
+        --exclude ".git/" \
+        --exclude ".cpanel.yml" \
+        --exclude ".gitignore" \
+        ./ "$DEPLOYPATH/"
