@@ -2,9 +2,7 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/tqksxakd/public_html/
-     - /bin/cp -R aframe $DEPLOYPATH
-     - /bin/cp -R doors $DEPLOYPATH
-     - /bin/cp -R media $DEPLOYPATH
-     - /bin/cp -R js $DEPLOYPATH
-
-
+    - /bin/cp -R aframe $DEPLOYPATH
+    - /bin/cp -R doors $DEPLOYPATH
+    - /bin/cp -R media $DEPLOYPATH
+    - /bin/cp -R js $DEPLOYPATH
