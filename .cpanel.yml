@@ -5,8 +5,7 @@ deployment:
     - set -euo pipefail
     - /bin/mkdir -p "$DEPLOYPATH"
 
-    - /usr/bin/rsync -a --delete \
-        --exclude ".git/" \
-        --exclude ".cpanel.yml" \
-        --exclude ".gitignore" \
-        ./ "$DEPLOYPATH/"
+    - /usr/bin/rsync -a --delete "aframe/" "$DEPLOYPATH/aframe/"
+    - /usr/bin/rsync -a --delete "doors/"  "$DEPLOYPATH/doors/"
+    - /usr/bin/rsync -a --delete "media/"  "$DEPLOYPATH/media/"
+    - /usr/bin/rsync -a --delete "js/"     "$DEPLOYPATH/js/"
