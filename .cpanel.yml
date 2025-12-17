@@ -1,11 +1,18 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/tqksxakd/public_html
+    - export DEPLOYPATH=/home/tqksxakd/public_html/site
     - set -euo pipefail
     - /bin/mkdir -p "$DEPLOYPATH"
 
-    - /usr/bin/rsync -a --delete "aframe/" "$DEPLOYPATH/aframe/"
-    - /usr/bin/rsync -a --delete "doors/"  "$DEPLOYPATH/doors/"
-    - /usr/bin/rsync -a --delete "media/"  "$DEPLOYPATH/media/"
-    - /usr/bin/rsync -a --delete "js/"     "$DEPLOYPATH/js/"
+    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+        aframe/ "$DEPLOYPATH/aframe/"
+
+    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+        doors/ "$DEPLOYPATH/doors/"
+
+    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+        js/ "$DEPLOYPATH/js/"
+
+    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+        media/ "$DEPLOYPATH/media/"
