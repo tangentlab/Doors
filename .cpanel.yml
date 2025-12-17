@@ -5,8 +5,8 @@ deployment:
     - set -euo pipefail
     - /bin/mkdir -p "$DEPLOYPATH"
 
-    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
-        aframe/ "$DEPLOYPATH/aframe/"
+    # - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+    #     aframe/ "$DEPLOYPATH/aframe/"
 
     - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
         doors/ "$DEPLOYPATH/doors/"
