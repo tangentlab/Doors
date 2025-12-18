@@ -5,14 +5,12 @@ deployment:
     - set -euo pipefail
     - /bin/mkdir -p "$DEPLOYPATH"
 
-    - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
-        aframe/ "$DEPLOYPATH/aframe/"
-
-    # - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
-    #     doors/ "$DEPLOYPATH/doors/"
-
-    # - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
-    #     js/ "$DEPLOYPATH/js/"
-
-    # - /usr/bin/rsync -a --delete --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
-    #     media/ "$DEPLOYPATH/media/"
+    - /usr/bin/rsync -a --delete \
+        --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
+        --exclude ".git/" \
+        --exclude ".cpanel.yml" \
+        --exclude ".gitignore" \
+        --exclude ".DS_Store" \
+        --exclude "node_modules/" \
+        --exclude "*.mp4" --exclude "*.mov" --exclude "*.mkv" \
+        ./ "$DEPLOYPATH/"
