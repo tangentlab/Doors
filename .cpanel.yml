@@ -4,11 +4,13 @@ deployment:
     - export DEPLOYPATH=/home/tqksxakd/public_html/site
     - set -euo pipefail
     - /bin/mkdir -p "$DEPLOYPATH"
-    - /bin/rm -rf "$DEPLOYPATH"/*
 
-    # deploy tracked files only (no .git, no FETCH_HEAD/config/hooks, no random junk)
+    # delete everything EXCEPT media/
+    - /usr/bin/find "$DEPLOYPATH" -mindepth 1 -maxdepth 1 ! -name "media" -exec /bin/rm -rf {} +
+
+    # deploy tracked files only
     - /usr/bin/git archive --format=tar HEAD | /bin/tar -x -C "$DEPLOYPATH"
 
-    # web-safe perms
-    - /bin/find "$DEPLOYPATH" -type d -exec /bin/chmod 755 {} \;
-    - /bin/find "$DEPLOYPATH" -type f -exec /bin/chmod 644 {} \;
+    # web-safe perms (do NOT chmod media if you want to keep existing perms)
+    - /usr/bin/find "$DEPLOYPATH" -mindepth 1 -maxdepth 1 ! -name "media" -type d -exec /bin/chmod 755 {} \;
+    - /usr/bin/find "$DEPLOYPATH" -mindepth 1 -maxdepth 1 ! -name "media" -type f -exec /bin/chmod 644 {} \;
