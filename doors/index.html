@@ -11,13 +11,15 @@
     <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.jss"></script>
 
     <script id="link" type="text/html">
-      <a-entity class="link"
-      geometry="primitive: plane; height: 1; width: 1"
+      <a-entity
+      class="link"
+      geometry="primitive: circle; height: 0.2; width: 0.2"
       material="shader: flat; src: ${thumb}"
       sound="on: click; src: #click-sound"
       event-set__mouseenter="scale: 1.2 1.2 1"
       event-set__mouseleave="scale: 1 1 1"
-      event-set__click="_target: #video-sphere; _delay: 300; material.src: ${src}"></a-entity>
+      event-set__click="_target: #video-sphere; _delay: 300; material.src: ${src}">
+      </a-entity>
     </script>
 
     <script src="../js/play-on-click.js"></script>
@@ -65,7 +67,7 @@
     </a-videosphere>
 
     <!-- Link template we will build. -->
-     <a-entity id="links" layout="type: line; margin: 1.5" position="-1.5 -1 -4">
+    <a-entity id="links" layout="type: line; margin: 1.5" position="-1.5 1 -4">
 
       <a-entity template="src: #link" data-src="#enterance" data-thumb="#city-thumb"></a-entity>
       <a-entity template="src: #link" data-src="#funnel" data-thumb="#funnel-thumb"></a-entity>
