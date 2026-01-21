@@ -17,20 +17,21 @@
       material="shader: flat; src: ${thumb}"
       sound="on: click; src: #click-sound"
       event-set__mouseenter="scale: 1.2 1.2 1"
-      event-set__mouseleave="scale: 1 1 1"
+      event-set__mouseleave="scale: .5 .5 .5"
       event-set__click="_target: #video-sphere; _delay: 300; material.src: ${src}">
       </a-entity>
     </script>
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
+    <script src="../js/hotspots.js"></script>
   </head>
   <body>
     <a-scene>
       <a-assets>
         <audio id="click-sound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
 
-        <video id="enterance" preload="auto"
+        <video id="entrance" preload="auto"
                src="../media/winter/01_Entrance_11-25.mp4"
                width="160" height="90" autoplay loop="true"
                crossOrigin="anonymous">
@@ -58,7 +59,7 @@
       </a-assets>
 
     <a-videosphere
-      src="#enterance"
+      src="#entrance"
       id="video-sphere"
       radius="500"
       position="0 0 0"
@@ -67,12 +68,14 @@
     </a-videosphere>
 
     <!-- Link template we will build. -->
-    <a-entity id="links" layout="type: line; margin: 1.5" position="-1.5 1 -4">
+    <!-- <a-entity id="links" layout="type: line; margin: 1.5" position="-1.5 1 -4">
 
-      <a-entity template="src: #link" data-src="#enterance" data-thumb="#city-thumb"></a-entity>
+      <a-entity template="src: #link" data-src="#entrance" data-thumb="#city-thumb"></a-entity>
       <a-entity template="src: #link" data-src="#funnel" data-thumb="#funnel-thumb"></a-entity>
       <a-entity template="src: #link" data-src="#heart" data-thumb="#heart-thumb"></a-entity>
-    </a-entity>
+      <a-entity template="src: #link" data-src="#lookout" data-thumb="#lookout-thumb"></a-entity>
+      <a-entity template="src: #link" data-src="#bottoms" data-thumb="#bottoms-thumb"></a-entity>
+    </a-entity> -->
 
 <!-- Camera + Cursor. -->
       <a-camera wasd-controls-enabled="false">
