@@ -19,7 +19,7 @@ const HOTSPOT_LAYOUTS = {
         elevation: 0,
         label: 'Main Door',
         color: '#FF6B6B',
-        onClick: () => console.log('Entrance door clicked')
+        onClick: () => window.hotspotManager.changeVideo('funnel')
       },
       {
         id: 'entrance-sign',
@@ -27,7 +27,7 @@ const HOTSPOT_LAYOUTS = {
         elevation: 0,
         label: 'Sign',
         color: '#4ECDC4',
-        onClick: () => console.log('Sign clicked')
+        onClick: () => window.hotspotManager.changeVideo('heart')
       }
     ]
   },
@@ -317,6 +317,12 @@ class HotspotManager {
       };
     }
     return null;
+  }
+
+  // Method to change video
+  changeVideo(videoId) {
+    const videoSphere = document.querySelector('#video-sphere');
+    videoSphere.setAttribute('src', `#${videoId}`);
   }
 }
 
