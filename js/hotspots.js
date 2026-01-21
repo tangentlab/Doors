@@ -15,7 +15,7 @@ const HOTSPOT_LAYOUTS = {
     hotspots: [
       {
         id: 'entrance-door',
-        azimuth: 0,
+        azimuth: 200,
         elevation: 0,
         label: 'Main Door',
         color: '#FF6B6B',
@@ -23,7 +23,7 @@ const HOTSPOT_LAYOUTS = {
       },
       {
         id: 'entrance-sign',
-        azimuth: 90,
+        azimuth: 80,
         elevation: 0,
         label: 'Sign',
         color: '#4ECDC4',
@@ -157,6 +157,7 @@ class HotspotManager {
     this.currentHotspots = [];
     this.hotspotsContainer = null;
     this.currentVideoId = 'entrance';
+
     this.init();
   }
 
@@ -225,6 +226,10 @@ class HotspotManager {
     // Convert spherical to cartesian coordinates
     const cartesian = sphericalToCartesian(radius, hotspotData.azimuth, hotspotData.elevation);
     hotspot.setAttribute('position', `${cartesian.x} ${cartesian.y} ${cartesian.z}`);
+
+    // Calculate rotation to face camera (at origin)
+    const rotation = this.calculateLookAtRotation(cartesian.x, cartesian.y, cartesian.z);
+    hotspot.setAttribute('rotation', rotation);
 
     // Store spherical data on the element for easy access
     hotspot.hotspotData = hotspotData;
@@ -323,6 +328,18 @@ class HotspotManager {
   changeVideo(videoId) {
     const videoSphere = document.querySelector('#video-sphere');
     videoSphere.setAttribute('src', `#${videoId}`);
+  }
+
+  // Calculate rotation to make entity face origin (0,0,0)
+  calculateLookAtRotation(x, y, z) {
+    const dx = -x;
+    const dy = -y;
+    const dz = -z;
+
+    const rotationX = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * (180 / Math.PI);
+    const rotationY = Math.atan2(dx, dz) * (180 / Math.PI);
+
+    return `${rotationX} ${rotationY} 0`;
   }
 }
 
