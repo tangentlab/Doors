@@ -26,7 +26,7 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 80,
         elevation: 0,
         label: 'Sign',
-        color: '#4ECDC4',
+        color: '#ffffff',
         onClick: () => window.hotspotManager.changeVideo('heart')
       }
     ]
