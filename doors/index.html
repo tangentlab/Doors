@@ -9,6 +9,9 @@
     <script src="https://unpkg.com/aframe-layout-component@5.x.x/dist/aframe-layout-component.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
     <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.jss"></script>
+    <script src="../js/play-on-click.js"></script>
+    <script src="../js/hide-on-play.js"></script>
+    <script src="../js/hotspots.js"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -22,9 +25,7 @@
       </a-entity>
     </script>
 
-    <script src="../js/play-on-click.js"></script>
-    <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js"></script>
+
   </head>
   <body>
     <a-scene >
@@ -92,7 +93,7 @@
     </a-entity> -->
 
 <!-- Camera + Cursor. -->
-      <a-camera wasd-controls-enabled="false">
+      <a-camera wasd-controls-enabled="false" look-controls>
         <a-cursor
         id="cursor"
         animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
