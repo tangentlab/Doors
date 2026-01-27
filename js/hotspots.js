@@ -346,4 +346,13 @@ class HotspotManager {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   window.hotspotManager = new HotspotManager('a-scene');
+
+  // setTimeout(function() {
+  //         var entranceVideo = document.getElementById('entrance');
+  //         if (entranceVideo) {
+  //           entranceVideo.play().catch(function(error) {
+  //             console.log('Autoplay prevented:', error);
+  //           });
+  //         }
+  //       }, 500);
 });
