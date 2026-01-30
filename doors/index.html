@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Doors Testing</title>
-    <meta name="description" content="Video - A-Frame">
-    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-template-component@3.x.x/dist/aframe-template-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-layout-component@5.x.x/dist/aframe-layout-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.jss"></script>
-    <script src="../js/play-on-click.js"></script>
-    <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js"></script>
 
-    <script id="link" type="text/html">
+<head>
+  <meta charset="utf-8">
+  <title>Doors Testing</title>
+  <meta name="description" content="Video - A-Frame">
+  <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-template-component@3.x.x/dist/aframe-template-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-layout-component@5.x.x/dist/aframe-layout-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
+  <script src="https://unpkg.com/aframe-proxy-event-component@2.1.0/dist/aframe-proxy-event-component.min.jss"></script>
+  <script src="../js/play-on-click.js"></script>
+  <script src="../js/hide-on-play.js"></script>
+  <script src="../js/hotspots.js"></script>
+
+  <script id="link" type="text/html">
       <a-entity
       class="link"
       geometry="primitive: circle; height: 0.2; width: 0.2"
@@ -26,87 +27,55 @@
     </script>
 
 
-  </head>
-  <body>
-    <a-scene >
-      <a-assets>
-        <audio id="click-sound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
+</head>
 
-        <video id="entrance" preload="auto"
-               src="../media/winter/01_Entrance_11-25.mp4"
-               width="160" height="90" autoplay muted loop
-               crossOrigin="anonymous">
-        </video>
-        <video id="funnel" preload="auto"
-               src="../media/winter/02_Funnel_11-25.mp4"
-               width="160" height="90" autoplay muted loop
-               crossOrigin="anonymous">
-        </video>
-        <video id="heart" preload="auto"
-               src="../media/winter/03_Heart_11-25.mp4"
-               width="160" height="90" autoplay muted loop
-               crossOrigin="anonymous">
-        </video>
-        <video id="lookout" preload="auto"
-               src="../media/winter/04_Lookout_11-25.mp4"
-               width="160" height="90" autoplay muted loop
-               crossOrigin="anonymous">
-        </video>
-        <video id="bottoms" preload="auto"
-               src="../media/winter/05_Bottoms_11-25.mp4"
-               width="160" height="90" autoplay muted loop
-               crossOrigin="anonymous">
-        </video>
-      </a-assets>
+<body>
+  <a-scene>
+    <a-assets>
+      <audio id="click-sound" src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"></audio>
 
-    <a-videosphere
-      src="#entrance"
-      id="video-sphere"
-      radius="500"
-      position="0 0 0"
-      rotation="0 -90 0"
-      >
+      <video id="entrance" preload="auto" src="../media/winter/01_Entrance_11-25.mp4" width="160" height="90" autoplay
+        muted loop crossOrigin="anonymous">
+      </video>
+      <video id="funnel" preload="auto" src="../media/winter/02_Funnel_11-25.mp4" width="160" height="90" autoplay muted
+        loop crossOrigin="anonymous">
+      </video>
+      <video id="heart" preload="auto" src="../media/winter/03_Heart_11-25.mp4" width="160" height="90" autoplay muted
+        loop crossOrigin="anonymous">
+      </video>
+      <video id="lookout" preload="auto" src="../media/winter/04_Lookout_11-25.mp4" width="160" height="90" autoplay
+        muted loop crossOrigin="anonymous">
+      </video>
+      <video id="bottoms" preload="auto" src="../media/winter/05_Bottoms_11-25.mp4" width="160" height="90" autoplay
+        muted loop crossOrigin="anonymous">
+      </video>
+    </a-assets>
+
+    <a-videosphere src="#entrance" id="video-sphere" radius="500" position="0 0 0" rotation="0 -90 0">
     </a-videosphere>
 
-    <script>
-      // Auto-play entrance video when scene loads
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          var entranceVideo = document.getElementById('entrance');
-          if (entranceVideo) {
-            entranceVideo.play().catch(function(error) {
-              console.log('Autoplay prevented:', error);
-            });
-          }
-        }, 500);
-      });
-    </script>
+    <!-- Camera + Cursor. -->
+    <a-camera wasd-controls-enabled="false" look-controls>
+      <!-- Use mouse rayOrigin for desktop pointer input (invisible entity). This enables mouse hover/click events on entities instead of the VR reticle. -->
+      <a-entity cursor="rayOrigin: mouse; fuse: false"></a-entity>
 
-    <!-- Link template we will build. -->
-    <!-- <a-entity id="links" layout="type: line; margin: 1.5" position="-1.5 1 -4">
+    </a-camera>
 
-      <a-entity template="src: #link" data-src="#entrance" data-thumb="#city-thumb"></a-entity>
-      <a-entity template="src: #link" data-src="#funnel" data-thumb="#funnel-thumb"></a-entity>
-      <a-entity template="src: #link" data-src="#heart" data-thumb="#heart-thumb"></a-entity>
-      <a-entity template="src: #link" data-src="#lookout" data-thumb="#lookout-thumb"></a-entity>
-      <a-entity template="src: #link" data-src="#bottoms" data-thumb="#bottoms-thumb"></a-entity>
-    </a-entity> -->
+  </a-scene>
 
-<!-- Camera + Cursor. -->
-      <a-camera wasd-controls-enabled="false" look-controls>
-        <!-- Use mouse rayOrigin for desktop pointer input (invisible entity). This enables mouse hover/click events on entities instead of the VR reticle. -->
-        <a-entity cursor="rayOrigin: mouse; fuse: false"></a-entity>
-        <!-- <a-entity
-          position="0 0 -1.5"
-          text="align: center;
-                width: 6;
-                wrapCount: 100;
-                color: black;
-                value: Click or tap to start video"
-          hide-on-play="#videoFireworks">
-        </a-entity> -->
-      </a-camera>
+  <script>
+    // Auto-play entrance video when scene loads
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        var entranceVideo = document.getElementById('entrance');
+        if (entranceVideo) {
+          entranceVideo.play().catch(function (error) {
+            console.log('Autoplay prevented:', error);
+          });
+        }
+      }, 500);
+    });
+  </script>
+</body>
 
-    </a-scene>
-  </body>
 </html>
