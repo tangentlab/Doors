@@ -26,7 +26,7 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 80,
         elevation: 0,
         label: 'Sign',
-        color: '#4ECDC4',
+        color: '#ffffff',
         onClick: () => window.hotspotManager.changeVideo('heart')
       }
     ]
@@ -246,9 +246,21 @@ class HotspotManager {
     visual.setAttribute('event-set__mouseenter', 'scale: 1.3 1.3 1.3; opacity: 1');
     visual.setAttribute('event-set__mouseleave', 'scale: 1 1 1; opacity: 0.8');
 
-    // Click handler
+    // Change OS mouse cursor when hovering hotspots (desktop)
+    visual.addEventListener('mouseenter', () => { document.body.style.cursor = 'pointer'; });
+    visual.addEventListener('mouseleave', () => { document.body.style.cursor = ''; });
+
+    // Mouse down/up visual feedback (scales the visual slightly) — works for mouse and cursor events
+    visual.addEventListener('mousedown', () => { visual.object3D.scale.set(0.8, 0.8, 0.8); });
+    visual.addEventListener('mouseup', () => { visual.object3D.scale.set(1, 1, 1); });
+
+    // Click handler (works for mouse & VR). Also plays a click sound if available
     visual.addEventListener('click', (e) => {
       e.stopPropagation();
+      const clickSound = document.querySelector('#click-sound');
+      if (clickSound) {
+        try { clickSound.currentTime = 0; clickSound.play(); } catch (err) { /* ignore autoplay/security errors */ }
+      }
       hotspotData.onClick();
     });
 
@@ -346,4 +358,13 @@ class HotspotManager {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   window.hotspotManager = new HotspotManager('a-scene');
+
+  // setTimeout(function() {
+  //         var entranceVideo = document.getElementById('entrance');
+  //         if (entranceVideo) {
+  //           entranceVideo.play().catch(function(error) {
+  //             console.log('Autoplay prevented:', error);
+  //           });
+  //         }
+  //       }, 500);
 });
