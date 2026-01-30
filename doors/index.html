@@ -94,11 +94,8 @@
 
 <!-- Camera + Cursor. -->
       <a-camera wasd-controls-enabled="false" look-controls>
-        <a-cursor
-        id="cursor"
-        animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
-        animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
-        animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing"></a-cursor>
+        <!-- Use mouse rayOrigin for desktop pointer input (invisible entity). This enables mouse hover/click events on entities instead of the VR reticle. -->
+        <a-entity cursor="rayOrigin: mouse; fuse: false"></a-entity>
         <!-- <a-entity
           position="0 0 -1.5"
           text="align: center;
