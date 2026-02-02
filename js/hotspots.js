@@ -11,36 +11,31 @@
  */
 const HOTSPOT_LAYOUTS = {
   entrance: {
+    //
     radius: 250,
+    orientation: -90, // yaw (Y-axis) degrees to align this video's forward direction
     hotspots: [
       {
         id: 'entrance-door',
-        azimuth: 200,
+        azimuth: 170,
         elevation: 0,
         label: 'Main Door',
-        color: '#FF6B6B',
+        color: '#00839a',
         onClick: () => window.hotspotManager.changeVideo('funnel')
-      },
-      {
-        id: 'entrance-sign',
-        azimuth: 80,
-        elevation: 0,
-        label: 'Sign',
-        color: '#ffffff',
-        onClick: () => window.hotspotManager.changeVideo('heart')
       }
     ]
   },
   funnel: {
     radius: 250,
+    orientation: 0,
     hotspots: [
       {
         id: 'funnel-top',
         azimuth: 0,
         elevation: 60,
-        label: 'Funnel Top',
+        label: 'To Entrance',
         color: '#95E1D3',
-        onClick: () => console.log('Funnel top clicked')
+        onClick: () => window.hotspotManager.changeVideo('entrance')
       },
       {
         id: 'funnel-bottom',
@@ -62,6 +57,7 @@ const HOTSPOT_LAYOUTS = {
   },
   heart: {
     radius: 250,
+    orientation: 0,
     hotspots: [
       {
         id: 'heart-center',
@@ -91,6 +87,7 @@ const HOTSPOT_LAYOUTS = {
   },
   lookout: {
     radius: 250,
+    orientation: 0,
     hotspots: [
       {
         id: 'lookout-vista',
@@ -112,6 +109,7 @@ const HOTSPOT_LAYOUTS = {
   },
   bottoms: {
     radius: 250,
+    orientation: 0,
     hotspots: [
       {
         id: 'bottoms-water',
@@ -165,7 +163,14 @@ class HotspotManager {
     // Create container for hotspots
     this.hotspotsContainer = document.createElement('a-entity');
     this.hotspotsContainer.id = 'hotspots-container';
-    this.scene.appendChild(this.hotspotsContainer);
+
+    // Attach the hotspots container to the video sphere so hotspots rotate together with the video content.
+    this.videoSphere = document.querySelector('#video-sphere');
+    if (this.videoSphere) {
+      this.videoSphere.appendChild(this.hotspotsContainer);
+    } else {
+      this.scene.appendChild(this.hotspotsContainer);
+    }
 
     // Setup event listener for video changes
     this.setupVideoChangeListener();
@@ -180,6 +185,8 @@ class HotspotManager {
     if (initialSrc) {
       this.currentVideoId = initialSrc.replace('#', '');
       this.loadHotspotsForVideo(this.currentVideoId);
+      // Apply any orientation specified for this video
+      this.applyVideoOrientation(this.currentVideoId);
       console.log(`HotspotManager: Loaded initial hotspots for "${this.currentVideoId}"`);
     }
 
@@ -191,6 +198,8 @@ class HotspotManager {
         if (videoId !== this.currentVideoId) {
           this.currentVideoId = videoId;
           this.loadHotspotsForVideo(videoId);
+          // Apply orientation for the new video
+          this.applyVideoOrientation(videoId);
           console.log(`HotspotManager: Changed hotspots to "${videoId}"`);
         }
       }
@@ -340,6 +349,30 @@ class HotspotManager {
   changeVideo(videoId) {
     const videoSphere = document.querySelector('#video-sphere');
     videoSphere.setAttribute('src', `#${videoId}`);
+  }
+
+  // Apply configured orientation (yaw) for a given video so the forward direction stays consistent
+  applyVideoOrientation(videoId) {
+    const layout = HOTSPOT_LAYOUTS[videoId];
+    if (!layout || typeof layout.orientation === 'undefined') return;
+    if (!this.videoSphere) this.videoSphere = document.querySelector('#video-sphere');
+    if (!this.videoSphere) return;
+    const yaw = layout.orientation;
+    // Set Y rotation; keep X/Z at 0 for typical video spheres
+    this.videoSphere.setAttribute('rotation', `0 ${yaw} 0`);
+  }
+
+  // Set orientation for a video (degrees yaw) — updates layout and applies immediately if active
+  setVideoOrientation(videoId, yawDegrees) {
+    if (!HOTSPOT_LAYOUTS[videoId]) HOTSPOT_LAYOUTS[videoId] = { radius: 250, hotspots: [] };
+    HOTSPOT_LAYOUTS[videoId].orientation = yawDegrees;
+    if (this.currentVideoId === videoId) this.applyVideoOrientation(videoId);
+  }
+
+  // Get orientation for a video (degrees yaw)
+  getVideoOrientation(videoId) {
+    const layout = HOTSPOT_LAYOUTS[videoId];
+    return layout ? layout.orientation : undefined;
   }
 
   // Calculate rotation to make entity face origin (0,0,0)
