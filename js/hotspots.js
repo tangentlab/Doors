@@ -18,7 +18,7 @@ const HOTSPOT_LAYOUTS = {
       {
         id: "entrance-door",
         azimuth: 90,
-        elevation: 0,
+        elevation: 1,
         label: "To Funnel",
         color: "#00839a",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
@@ -32,7 +32,7 @@ const HOTSPOT_LAYOUTS = {
       {
         id: "funnel-top",
         azimuth: 0,
-        elevation: 60,
+        elevation: 1,
         label: "To Entrance",
         color: "#95E1D3",
         onClick: () => window.hotspotManager.changeVideo("entrance"),
@@ -40,7 +40,7 @@ const HOTSPOT_LAYOUTS = {
       {
         id: "funnel-bottom",
         azimuth: 180,
-        elevation: -50,
+        elevation: 1,
         label: "To Bottoms",
         color: "#F38181",
         onClick: () => window.hotspotManager.changeVideo("heart"),
@@ -48,7 +48,7 @@ const HOTSPOT_LAYOUTS = {
       {
         id: "funnel-side",
         azimuth: 270,
-        elevation: 0,
+        elevation: 1,
         label: "To Lookout",
         color: "#AA96DA",
         onClick: () => window.hotspotManager.changeVideo("lookout"),
@@ -78,7 +78,7 @@ const HOTSPOT_LAYOUTS = {
       {
         id: "heart-right",
         azimuth: 90,
-        elevation: 0,
+        elevation: 1,
         label: "To Funnel",
         color: "#FFC0CB",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
@@ -444,6 +444,7 @@ class HotspotManager {
   setVideoOrientation(videoId, yawDegrees) {
     if (!HOTSPOT_LAYOUTS[videoId])
       HOTSPOT_LAYOUTS[videoId] = { radius: 250, hotspots: [] };
+
     HOTSPOT_LAYOUTS[videoId].orientation = yawDegrees;
     if (this.currentVideoId === videoId) this.applyVideoOrientation(videoId);
   }
@@ -472,12 +473,12 @@ class HotspotManager {
 document.addEventListener("DOMContentLoaded", () => {
   window.hotspotManager = new HotspotManager("a-scene");
 
-  // setTimeout(function() {
-  //         var entranceVideo = document.getElementById('entrance');
-  //         if (entranceVideo) {
-  //           entranceVideo.play().catch(function(error) {
-  //             console.log('Autoplay prevented:', error);
-  //           });
-  //         }
-  //       }, 500);
+  setTimeout(function () {
+    var entranceVideo = document.getElementById("entrance");
+    if (entranceVideo) {
+      entranceVideo.play().catch(function (error) {
+        console.log("Autoplay prevented:", error);
+      });
+    }
+  }, 500);
 });
