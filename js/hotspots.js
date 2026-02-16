@@ -437,6 +437,17 @@ class HotspotManager {
   changeVideo(videoId) {
     const videoSphere = document.querySelector("#video-sphere");
     videoSphere.setAttribute("src", `#${videoId}`);
+    const newVideo = document.querySelector(`#${videoId}`);
+    newVideo.play().catch(function (error) {
+      console.log("Autoplay prevented:", error);
+    });
+
+    // videoSphere.components.material.material.map.image
+    //   .play()
+    //   .catch(function (error) {
+    //     console.log("Autoplay prevented:", error);
+    //   });
+    //videoSphere.components.material.data.src.currentTime;
   }
 
   // Apply configured orientation (yaw) for a given video so the forward direction stays consistent
