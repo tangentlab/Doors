@@ -9,6 +9,16 @@
  * - azimuth: horizontal rotation in degrees (0-360, where 0 = front, 90 = right, 180 = back, 270 = left)
  * - elevation: vertical rotation in degrees (-90 = bottom, 0 = center, 90 = top)
  */
+
+/** Audio track per space (concat, solstice, or duet). Played when entering that space. */
+const SPACE_AUDIO = {
+  entrance: "#concat",
+  funnel: "#solstice",
+  heart: "#duet",
+  lookout: "#concat",
+  bottoms: "#solstice",
+};
+
 const HOTSPOT_LAYOUTS = {
   entrance: {
     //
@@ -21,7 +31,6 @@ const HOTSPOT_LAYOUTS = {
         elevation: 1,
         label: "To Funnel",
         color: "#00839a",
-        audio: "#entrance-sound",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
       },
     ],
@@ -36,7 +45,6 @@ const HOTSPOT_LAYOUTS = {
         elevation: 1,
         label: "To Entrance",
         color: "#95E1D3",
-        audio: "#funnel-top-sound",
         onClick: () => window.hotspotManager.changeVideo("entrance"),
       },
       {
@@ -53,7 +61,6 @@ const HOTSPOT_LAYOUTS = {
         elevation: 1,
         label: "To Heart",
         color: "#F38181",
-        audio: "#funnel-heart-sound",
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
       {
@@ -174,6 +181,8 @@ class HotspotManager {
     this.currentHotspots = [];
     this.hotspotsContainer = null;
     this.currentVideoId = "entrance";
+    /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
+    this.currentHotspotAudio = null;
 
     this.init();
   }
@@ -204,8 +213,8 @@ class HotspotManager {
     if (initialSrc) {
       this.currentVideoId = initialSrc.replace("#", "");
       this.loadHotspotsForVideo(this.currentVideoId);
-      // Apply any orientation specified for this video
       this.applyVideoOrientation(this.currentVideoId);
+      this.playSpaceAudio(this.currentVideoId);
       console.log(
         `HotspotManager: Loaded initial hotspots for "${this.currentVideoId}"`,
       );
@@ -219,8 +228,8 @@ class HotspotManager {
         if (videoId !== this.currentVideoId) {
           this.currentVideoId = videoId;
           this.loadHotspotsForVideo(videoId);
-          // Apply orientation for the new video
           this.applyVideoOrientation(videoId);
+          this.playSpaceAudio(videoId);
           console.log(`HotspotManager: Changed hotspots to "${videoId}"`);
         }
       }
@@ -312,7 +321,7 @@ class HotspotManager {
       visual.object3D.scale.set(1, 1, 1);
     });
 
-    // Click handler (works for mouse & VR). Also plays a click sound if available
+    // Click handler (works for mouse & VR). Plays click sound, then runs onClick (space audio is played when entering the space)
     visual.addEventListener("click", (e) => {
       e.stopPropagation();
       const clickSound = document.querySelector("#click-sound");
@@ -433,6 +442,30 @@ class HotspotManager {
     return null;
   }
 
+  /**
+   * Play the audio track for a space (entrance, funnel, heart, lookout, bottoms).
+   * Stops any currently playing space track first.
+   */
+  playSpaceAudio(spaceId) {
+    if (this.currentHotspotAudio) {
+      this.currentHotspotAudio.pause();
+      this.currentHotspotAudio.currentTime = 0;
+      this.currentHotspotAudio = null;
+    }
+    const audioSelector = SPACE_AUDIO[spaceId];
+    if (!audioSelector) return;
+    const audioEl = document.querySelector(audioSelector);
+    if (audioEl && typeof audioEl.play === "function") {
+      try {
+        audioEl.currentTime = 0;
+        audioEl.play();
+        this.currentHotspotAudio = audioEl;
+      } catch (err) {
+        console.warn("Space audio play failed:", err);
+      }
+    }
+  }
+
   // Method to change video
   changeVideo(videoId) {
     const videoSphere = document.querySelector("#video-sphere");
@@ -441,13 +474,6 @@ class HotspotManager {
     newVideo.play().catch(function (error) {
       console.log("Autoplay prevented:", error);
     });
-
-    // videoSphere.components.material.material.map.image
-    //   .play()
-    //   .catch(function (error) {
-    //     console.log("Autoplay prevented:", error);
-    //   });
-    //videoSphere.components.material.data.src.currentTime;
   }
 
   // Apply configured orientation (yaw) for a given video so the forward direction stays consistent
