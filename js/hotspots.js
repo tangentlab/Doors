@@ -19,6 +19,9 @@ const SPACE_AUDIO = {
   bottoms: "#solstice",
 };
 
+// Adjust this value to make the sphere-to-sphere blink faster or slower.
+const SPHERE_TRANSITION_DURATION_MS = 1700;
+
 const HOTSPOT_LAYOUTS = {
   entrance: {
     //
@@ -478,13 +481,17 @@ class HotspotManager {
 
     this.isTransitioning = true;
     this.hotspotsContainer.setAttribute("visible", false);
+    transition?.style.setProperty(
+      "--sphere-transition-duration",
+      `${SPHERE_TRANSITION_DURATION_MS}ms`,
+    );
     transition?.classList.add("is-active");
 
     const transitionDuration = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches
       ? 160
-      : 780;
+      : SPHERE_TRANSITION_DURATION_MS;
 
     // Swap the texture at the moment the iris is fully closed.
     await new Promise((resolve) =>
