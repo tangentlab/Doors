@@ -181,6 +181,7 @@ class HotspotManager {
     this.currentHotspots = [];
     this.hotspotsContainer = null;
     this.currentVideoId = "entrance";
+    this.isTransitioning = false;
     /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
     this.currentHotspotAudio = null;
 
@@ -467,13 +468,41 @@ class HotspotManager {
   }
 
   // Method to change video
-  changeVideo(videoId) {
+  async changeVideo(videoId) {
+    if (this.isTransitioning || videoId === this.currentVideoId) return;
+
     const videoSphere = document.querySelector("#video-sphere");
-    videoSphere.setAttribute("src", `#${videoId}`);
     const newVideo = document.querySelector(`#${videoId}`);
-    newVideo.play().catch(function (error) {
+    const transition = document.querySelector("#sphere-transition");
+    if (!videoSphere || !newVideo) return;
+
+    this.isTransitioning = true;
+    this.hotspotsContainer.setAttribute("visible", false);
+    transition?.classList.add("is-active");
+
+    const transitionDuration = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+      ? 160
+      : 780;
+
+    // Swap the texture at the moment the iris is fully closed.
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, transitionDuration / 2),
+    );
+    videoSphere.setAttribute("src", `#${videoId}`);
+    try {
+      await newVideo.play();
+    } catch (error) {
       console.log("Autoplay prevented:", error);
-    });
+    }
+
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, transitionDuration / 2),
+    );
+    transition?.classList.remove("is-active");
+    this.hotspotsContainer.setAttribute("visible", true);
+    this.isTransitioning = false;
   }
 
   // Apply configured orientation (yaw) for a given video so the forward direction stays consistent
