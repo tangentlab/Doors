@@ -91,11 +91,34 @@
           animation-duration: 160ms;
         }
       }
+
+      #ui-overlay {
+        position: fixed !important;
+        inset: 0;
+        z-index: 2147483647;
+        pointer-events: none;
+      }
+
+      #space-title {
+        position: absolute;
+        top: max(1rem, env(safe-area-inset-top));
+        left: max(1rem, env(safe-area-inset-left));
+        margin: 0;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 0.25rem;
+        background: rgba(5, 6, 7, 0.68);
+        color: #fff;
+        font: 600 0.875rem/1.2 system-ui, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
     </style>
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20260727-local-facing-labels"></script>
+    <script src="../js/hotspots.js?v=20260727-space-title-overlay"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -112,6 +135,9 @@
   </head>
 
   <body>
+    <div id="ui-overlay">
+      <div id="space-title" role="status" aria-live="polite">Entrance</div>
+    </div>
     <div id="sphere-transition" aria-hidden="true"></div>
     <a-scene>
       <a-assets>

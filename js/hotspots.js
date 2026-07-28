@@ -19,6 +19,14 @@ const SPACE_AUDIO = {
   bottoms: "#solstice",
 };
 
+const SPACE_TITLES = {
+  entrance: "Entrance",
+  funnel: "Funnel",
+  heart: "Heart",
+  lookout: "Lookout",
+  bottoms: "Bottoms",
+};
+
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
 
@@ -252,6 +260,7 @@ class HotspotManager {
       this.currentVideoId = initialSrc.replace("#", "");
       this.loadHotspotsForVideo(this.currentVideoId);
       this.applyVideoOrientation(this.currentVideoId);
+      this.updateSpaceTitle(this.currentVideoId);
       this.playSpaceAudio(this.currentVideoId);
       console.log(
         `HotspotManager: Loaded initial hotspots for "${this.currentVideoId}"`,
@@ -267,6 +276,7 @@ class HotspotManager {
           this.currentVideoId = videoId;
           this.loadHotspotsForVideo(videoId);
           this.applyVideoOrientation(videoId);
+          this.updateSpaceTitle(videoId);
           this.playSpaceAudio(videoId);
           console.log(`HotspotManager: Changed hotspots to "${videoId}"`);
         }
@@ -464,6 +474,11 @@ class HotspotManager {
       };
     }
     return null;
+  }
+
+  updateSpaceTitle(spaceId) {
+    const title = document.querySelector("#space-title");
+    if (title) title.textContent = SPACE_TITLES[spaceId] || spaceId;
   }
 
   /**
