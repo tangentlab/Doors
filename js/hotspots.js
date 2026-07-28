@@ -22,6 +22,40 @@ const SPACE_AUDIO = {
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
 
+/**
+ * Keep an entity's local +Z face aligned with the active camera.
+ *
+ * The hotspot container is parented to the video sphere, which can have its own
+ * rotation. Converting the camera's world quaternion into the hotspot's parent
+ * space keeps the entire hotspot (button and label) facing the viewer.
+ */
+AFRAME.registerComponent("face-camera", {
+  init() {
+    this.cameraWorldPosition = new THREE.Vector3();
+    this.cameraParentPosition = new THREE.Vector3();
+    this.lookAtMatrix = new THREE.Matrix4();
+  },
+
+  tick() {
+    const camera = this.el.sceneEl && this.el.sceneEl.camera;
+    const parent = this.el.object3D.parent;
+    if (!camera || !parent) return;
+
+    camera.getWorldPosition(this.cameraWorldPosition);
+    this.cameraParentPosition.copy(this.cameraWorldPosition);
+    parent.worldToLocal(this.cameraParentPosition);
+
+    // Build the facing rotation entirely in the hotspot parent's coordinate
+    // space. This avoids Object3D.lookAt's limitations with rotated parents.
+    this.lookAtMatrix.lookAt(
+      this.el.object3D.position,
+      this.cameraParentPosition,
+      this.el.object3D.up,
+    );
+    this.el.object3D.quaternion.setFromRotationMatrix(this.lookAtMatrix);
+  },
+});
+
 const HOTSPOT_LAYOUTS = {
   entrance: {
     //
@@ -67,8 +101,8 @@ const HOTSPOT_LAYOUTS = {
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
       {
-        id: "funnel-side",
-        azimuth: 45,
+        id: "funnel-lookout",
+        azimuth: 60,
         elevation: 1,
         label: "To Lookout",
         color: "#AA96DA",
@@ -279,14 +313,7 @@ class HotspotManager {
       "position",
       `${cartesian.x} ${cartesian.y} ${cartesian.z}`,
     );
-
-    // Calculate rotation to face camera (at origin)
-    const rotation = this.calculateLookAtRotation(
-      cartesian.x,
-      cartesian.y,
-      cartesian.z,
-    );
-    hotspot.setAttribute("rotation", rotation);
+    hotspot.setAttribute("face-camera", "");
 
     // Store spherical data on the element for easy access
     hotspot.hotspotData = hotspotData;
@@ -297,6 +324,10 @@ class HotspotManager {
     visual.setAttribute("radius", "5");
     visual.setAttribute("color", hotspotData.color);
     visual.setAttribute("opacity", "0.8");
+    // A-Frame circles and text have opposite front-face directions. Rendering
+    // both sides keeps the button visible and raycastable while its parent
+    // billboards toward the camera.
+    visual.setAttribute("side", "double");
     visual.setAttribute(
       "animation__scale-in",
       "property: scale; from: 0 0 0; to: 1 1 1; duration: 300; easing: easeInOutQuad",
@@ -358,17 +389,6 @@ class HotspotManager {
       label.setAttribute("color", hotspotData.color || "#FFFFFF");
       // Use double-sided so it remains visible from different angles
       label.setAttribute("side", "double");
-
-      // Reverse Y rotation so the text faces the camera (hotspot already faces origin)
-      try {
-        const rotationParts = rotation.split(" ");
-        const rotX = parseFloat(rotationParts[0]) || 0;
-        const rotY = (parseFloat(rotationParts[1]) || 0) + 180;
-        label.setAttribute("rotation", `${rotX} ${rotY} 0`);
-      } catch (err) {
-        // Fallback: flip around Y by 180 degrees
-        label.setAttribute("rotation", "0 180 0");
-      }
 
       hotspot.appendChild(label);
     }
@@ -539,18 +559,6 @@ class HotspotManager {
     return layout ? layout.orientation : undefined;
   }
 
-  // Calculate rotation to make entity face origin (0,0,0)
-  calculateLookAtRotation(x, y, z) {
-    const dx = -x;
-    const dy = -y;
-    const dz = -z;
-
-    const rotationX =
-      Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * (180 / Math.PI);
-    const rotationY = Math.atan2(dx, dz) * (180 / Math.PI);
-
-    return `${rotationX} ${rotationY} 0`;
-  }
 }
 
 // Initialize on page load
