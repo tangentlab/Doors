@@ -27,6 +27,19 @@ const SPACE_TITLES = {
   bottoms: "Bottoms",
 };
 
+const SPACE_INFO = {
+  entrance:
+    "The threshold into Doors. Take a moment to look around, listen, and select a marker in the landscape when you are ready to move deeper into the site.",
+  funnel:
+    "An enveloping sound field shaped by stream recordings, contact microphones, and granular textures. Turning through the space reveals routes into the surrounding landscape.",
+  heart:
+    "A resonant listening space where sound and place meet. Its musical character is inspired by physical locations and trees within the site.",
+  lookout:
+    "A quieter place for observation and context. The restrained interaction leaves room to attend to the wider landscape and its layered history.",
+  bottoms:
+    "An archive embedded in the landscape. This area gathers trail-camera images, soundscape compositions, plant knowledge, and other traces of the site.",
+};
+
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
 
@@ -229,6 +242,14 @@ class HotspotManager {
     this.isTransitioning = false;
     /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
     this.currentHotspotAudio = null;
+    this.infoButton = document.querySelector("#info-button");
+    this.infoBackdrop = document.querySelector("#info-panel-backdrop");
+    this.infoPanel = document.querySelector("#info-panel");
+    this.infoCloseButton = document.querySelector("#info-close");
+    this.infoHeading = document.querySelector("#info-panel-heading");
+    this.infoDescription = document.querySelector("#info-panel-description");
+    this.lastInfoFocus = null;
+    this.infoCloseTimer = null;
 
     this.init();
   }
@@ -248,6 +269,74 @@ class HotspotManager {
 
     // Setup event listener for video changes
     this.setupVideoChangeListener();
+    this.setupInfoPanel();
+  }
+
+  setupInfoPanel() {
+    if (!this.infoButton || !this.infoBackdrop || !this.infoCloseButton) return;
+
+    this.infoButton.addEventListener("click", () => this.openInfoPanel());
+    this.infoCloseButton.addEventListener("click", () => this.closeInfoPanel());
+    this.infoBackdrop.addEventListener("click", (event) => {
+      if (event.target === this.infoBackdrop) this.closeInfoPanel();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isInfoPanelOpen()) {
+        this.closeInfoPanel();
+      }
+      if (event.key === "Tab" && this.isInfoPanelOpen()) {
+        this.keepInfoFocusInside(event);
+      }
+    });
+  }
+
+  isInfoPanelOpen() {
+    return Boolean(this.infoBackdrop?.classList.contains("is-open"));
+  }
+
+  openInfoPanel() {
+    if (!this.infoBackdrop) return;
+    window.clearTimeout(this.infoCloseTimer);
+    this.lastInfoFocus = document.activeElement;
+    this.updateInfoPanel(this.currentVideoId);
+    this.infoBackdrop.hidden = false;
+    window.requestAnimationFrame(() => {
+      this.infoBackdrop.classList.add("is-open");
+      this.infoButton?.setAttribute("aria-expanded", "true");
+      this.infoCloseButton?.focus();
+    });
+  }
+
+  closeInfoPanel({ restoreFocus = true } = {}) {
+    if (!this.infoBackdrop) return;
+    this.infoBackdrop.classList.remove("is-open");
+    this.infoButton?.setAttribute("aria-expanded", "false");
+
+    const finishClose = () => {
+      this.infoBackdrop.hidden = true;
+      if (restoreFocus) {
+        const focusTarget = this.lastInfoFocus || this.infoButton;
+        focusTarget?.focus();
+      }
+    };
+
+    this.infoCloseTimer = window.setTimeout(finishClose, 180);
+  }
+
+  keepInfoFocusInside(event) {
+    const focusable = this.infoPanel?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (!focusable?.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   setupVideoChangeListener() {
@@ -479,6 +568,17 @@ class HotspotManager {
   updateSpaceTitle(spaceId) {
     const title = document.querySelector("#space-title");
     if (title) title.textContent = SPACE_TITLES[spaceId] || spaceId;
+    this.updateInfoPanel(spaceId);
+  }
+
+  updateInfoPanel(spaceId) {
+    const spaceTitle = SPACE_TITLES[spaceId] || spaceId;
+    if (this.infoHeading) this.infoHeading.textContent = spaceTitle;
+    if (this.infoDescription) {
+      this.infoDescription.textContent =
+        SPACE_INFO[spaceId] || "Explore this place through sight and sound.";
+    }
+    this.infoButton?.setAttribute("aria-label", `About ${spaceTitle}`);
   }
 
   /**
@@ -508,6 +608,10 @@ class HotspotManager {
   // Method to change video
   async changeVideo(videoId) {
     if (this.isTransitioning || videoId === this.currentVideoId) return;
+
+    if (this.isInfoPanelOpen()) {
+      this.closeInfoPanel({ restoreFocus: false });
+    }
 
     const videoSphere = document.querySelector("#video-sphere");
     const newVideo = document.querySelector(`#${videoId}`);
