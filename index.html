@@ -3,10 +3,239 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page Title</title>
+    <meta
+      name="description"
+      content="Doors is an interactive, place-based 360° audiovisual experience."
+    />
+    <title>Doors — A 360° Audiovisual Experience</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f3f1e9;
+        --muted: #c8c8ba;
+        --accent: #d6deae;
+        --background: #111713;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+        background: var(--background);
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(
+            circle at 50% 15%,
+            rgba(112, 135, 97, 0.22),
+            transparent 38rem
+          ),
+          linear-gradient(
+            145deg,
+            #182019 0%,
+            var(--background) 58%,
+            #090d0b 100%
+          );
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+          115deg,
+          transparent 0,
+          transparent 5rem,
+          rgba(255, 255, 255, 0.012) 5rem,
+          rgba(255, 255, 255, 0.012) calc(5rem + 1px)
+        );
+        content: "";
+        pointer-events: none;
+      }
+
+      main {
+        position: relative;
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: clamp(2rem, 6vw, 5rem) 1.25rem;
+      }
+
+      .welcome {
+        width: min(100%, 47rem);
+        text-align: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 1.25rem;
+        color: var(--accent);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(4.25rem, 13vw, 8.5rem);
+        font-weight: 400;
+        letter-spacing: -0.055em;
+        line-height: 0.85;
+      }
+
+      .introduction {
+        max-width: 38rem;
+        margin: 2rem auto 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 2.2vw, 1.16rem);
+        line-height: 1.75;
+      }
+
+      .image-placeholder {
+        position: relative;
+        display: grid;
+        width: min(100%, 38rem);
+        min-height: clamp(10rem, 27vw, 15rem);
+        margin: 2.25rem auto;
+        overflow: hidden;
+        place-items: center;
+        border: 1px solid rgba(214, 222, 174, 0.35);
+        border-radius: 50% 50% 1rem 1rem / 12% 12% 1rem 1rem;
+        background:
+          linear-gradient(rgba(8, 12, 9, 0.2), rgba(8, 12, 9, 0.72)),
+          linear-gradient(135deg, #354439, #1a241d 58%, #101712);
+      }
+
+      .image-placeholder::before,
+      .image-placeholder::after {
+        position: absolute;
+        bottom: -12%;
+        width: 75%;
+        height: 65%;
+        border-radius: 50% 50% 0 0;
+        background: rgba(8, 14, 10, 0.45);
+        content: "";
+        transform: rotate(8deg);
+      }
+
+      .image-placeholder::before {
+        left: -20%;
+      }
+
+      .image-placeholder::after {
+        right: -24%;
+        transform: rotate(-10deg);
+      }
+
+      .image-placeholder span {
+        z-index: 1;
+        padding: 0.55rem 0.8rem;
+        border: 1px solid rgba(243, 241, 233, 0.25);
+        background: rgba(12, 17, 13, 0.55);
+        color: rgba(243, 241, 233, 0.75);
+        font-size: 0.68rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .enter-button {
+        display: inline-flex;
+        min-width: 10.5rem;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem 1.75rem;
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        color: #10150f;
+        background: var(--accent);
+        font-size: 0.77rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transition:
+          background-color 180ms ease,
+          color 180ms ease,
+          transform 180ms ease;
+      }
+
+      .enter-button::after {
+        margin-left: 0.8rem;
+        content: "→";
+        font-size: 1rem;
+        transition: transform 180ms ease;
+      }
+
+      .enter-button:hover {
+        color: var(--ink);
+        background: transparent;
+        transform: translateY(-2px);
+      }
+
+      .enter-button:hover::after {
+        transform: translateX(0.2rem);
+      }
+
+      .enter-button:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 5px;
+      }
+
+      .sound-note {
+        margin: 1rem 0 0;
+        color: rgba(200, 200, 186, 0.72);
+        font-size: 0.76rem;
+        letter-spacing: 0.04em;
+      }
+
+      @media (max-width: 35rem) {
+        main {
+          align-items: start;
+          padding-top: 3.5rem;
+        }
+
+        .introduction {
+          line-height: 1.6;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .enter-button,
+        .enter-button::after {
+          transition: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Welcome</h1>
-    <p>Go to <a href="doors/index.html">doors</a></p>
+    <main>
+      <section class="welcome" aria-labelledby="welcome-title">
+        <p class="eyebrow">An interactive landscape</p>
+        <h1 id="welcome-title">Doors</h1>
+        <p class="introduction">
+          Move through a collection of recorded environments where landscape,
+          sound, and attention meet. Explore each 360° space, follow paths
+          between places, and listen as the experience changes around you.
+        </p>
+
+        <!-- <div
+          class="image-placeholder"
+          role="img"
+          aria-label="Placeholder for a project landscape image"
+        >
+          <span>Project image</span>
+        </div> -->
+
+        <a class="enter-button" href="doors/index.html">Enter</a>
+        <p class="sound-note">Best experienced with headphones</p>
+      </section>
+    </main>
   </body>
 </html>
