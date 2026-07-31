@@ -44,6 +44,8 @@ const SPACE_INFO = {
 const SPHERE_TRANSITION_DURATION_MS = 1700;
 // Change to false to disable the zoom while keeping the iris transition.
 const SPHERE_TRANSITION_ZOOM_ENABLED = true;
+// Change to false to remove the compass debugging label.
+const DIRECTION_DEBUG_ENABLED = true;
 
 /**
  * Keep an entity's local +Z face aligned with the active camera.
@@ -330,6 +332,8 @@ class HotspotManager {
     this.hotspotsContainer = null;
     this.currentVideoId = "entrance";
     this.isTransitioning = false;
+    // Remember the last leg so an immediate return can face back along it.
+    this.lastJourney = null;
     /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
     this.currentHotspotAudio = null;
     this.infoButton = document.querySelector("#info-button");
@@ -339,6 +343,9 @@ class HotspotManager {
     this.infoEyebrow = document.querySelector("#info-panel-eyebrow");
     this.infoHeading = document.querySelector("#info-panel-heading");
     this.infoDescription = document.querySelector("#info-panel-description");
+    this.directionDebug = document.querySelector("#direction-debug");
+    this.viewDirection = new THREE.Vector3();
+    this.lastDirectionLabel = "";
     this.lastInfoFocus = null;
     this.infoCloseTimer = null;
     this.init();
@@ -360,6 +367,31 @@ class HotspotManager {
     // Setup event listener for video changes
     this.setupVideoChangeListener();
     this.setupInfoPanel();
+    if (DIRECTION_DEBUG_ENABLED && this.directionDebug) {
+      this.directionDebug.hidden = false;
+      this.updateDirectionDebug();
+    }
+  }
+
+  updateDirectionDebug() {
+    const camera = this.scene?.camera;
+    if (camera) {
+      camera.getWorldDirection(this.viewDirection);
+      const heading = this.normalizeHeading(
+        (Math.atan2(this.viewDirection.x, -this.viewDirection.z) * 180) /
+          Math.PI,
+      );
+      const directions = ["NORTH", "EAST", "SOUTH", "WEST"];
+      const direction = directions[Math.round(heading / 90) % directions.length];
+      const degrees = String(Math.round(heading) % 360).padStart(3, "0");
+      const label = `${direction} · ${degrees}°`;
+      if (label !== this.lastDirectionLabel) {
+        this.directionDebug.value = label;
+        this.lastDirectionLabel = label;
+      }
+    }
+
+    window.requestAnimationFrame(() => this.updateDirectionDebug());
   }
 
   setupInfoPanel() {
@@ -399,6 +431,7 @@ class HotspotManager {
     } else {
       this.updateInfoPanel(this.currentVideoId);
     }
+
     this.infoBackdrop.hidden = false;
     window.requestAnimationFrame(() => {
       this.infoBackdrop.classList.add("is-open");
@@ -810,6 +843,15 @@ class HotspotManager {
   async changeVideo(videoId) {
     if (this.isTransitioning || videoId === this.currentVideoId) return;
 
+    const fromVideoId = this.currentVideoId;
+    const departureHeading = this.getViewHeading();
+    const isReturnJourney =
+      this.lastJourney?.from === videoId &&
+      this.lastJourney?.to === fromVideoId;
+    const arrivalHeading = isReturnJourney
+      ? this.normalizeHeading(this.lastJourney.heading + 180)
+      : departureHeading;
+
     if (this.isInfoPanelOpen()) {
       this.closeInfoPanel({ restoreFocus: false });
     }
@@ -846,6 +888,10 @@ class HotspotManager {
       window.setTimeout(resolve, transitionDuration / 2),
     );
     videoSphere.setAttribute("src", `#${videoId}`);
+    this.setViewHeading(arrivalHeading);
+    this.lastJourney = isReturnJourney
+      ? null
+      : { from: fromVideoId, to: videoId, heading: departureHeading };
     try {
       await newVideo.play();
     } catch (error) {
@@ -859,6 +905,28 @@ class HotspotManager {
     document.body.classList.remove("sphere-zoom-active");
     this.hotspotsContainer.setAttribute("visible", true);
     this.isTransitioning = false;
+  }
+
+  normalizeHeading(degrees) {
+    return ((degrees % 360) + 360) % 360;
+  }
+
+  // Keep the visitor's horizontal view stable while the panorama changes.
+  getViewHeading() {
+    const camera = this.scene?.querySelector("[camera]");
+    const rotation = camera?.getAttribute("rotation");
+    return this.normalizeHeading(rotation?.y || 0);
+  }
+
+  setViewHeading(heading) {
+    const camera = this.scene?.querySelector("[camera]");
+    if (!camera || typeof heading !== "number") return;
+    const rotation = camera.getAttribute("rotation") || { x: 0, y: 0, z: 0 };
+    camera.setAttribute("rotation", {
+      x: rotation.x,
+      y: this.normalizeHeading(heading),
+      z: rotation.z,
+    });
   }
 
   // Apply configured orientation (yaw) for a given video so the forward direction stays consistent
