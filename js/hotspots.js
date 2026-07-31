@@ -598,15 +598,51 @@ class HotspotManager {
       hotspot.appendChild(visual);
     }
 
+    const infoLabelWidth = hotspotData.label
+      ? Math.min(84, Math.max(40, hotspotData.label.length * 4.5))
+      : 40;
+    const infoIconX = -(infoLabelWidth / 2 + 15);
+
     if (hotspotData.type === "info") {
+      const infoButton = document.createElement("a-circle");
+      infoButton.setAttribute("class", "clickable");
+      infoButton.setAttribute("radius", "6");
+      infoButton.setAttribute("position", `${infoIconX} 11 0.2`);
+      infoButton.setAttribute("color", hotspotData.color);
+      infoButton.setAttribute("opacity", "0.95");
+      infoButton.setAttribute("side", "double");
+      infoButton.setAttribute("ui-depth-order", "order: 2");
+      infoButton.addEventListener("click", activateHotspot);
+      infoButton.addEventListener("mouseenter", () => {
+        document.body.style.cursor = "pointer";
+      });
+      infoButton.addEventListener("mouseleave", () => {
+        document.body.style.cursor = "";
+      });
+      hotspot.appendChild(infoButton);
+
+      const infoGlyph = document.createElement("a-text");
+      infoGlyph.setAttribute("value", "i");
+      infoGlyph.setAttribute("position", `${infoIconX} 11 0.4`);
+      infoGlyph.setAttribute("align", "center");
+      infoGlyph.setAttribute("anchor", "center");
+      infoGlyph.setAttribute("baseline", "center");
+      infoGlyph.setAttribute("width", "18");
+      infoGlyph.setAttribute("scale", "10 10 10");
+      infoGlyph.setAttribute("color", "#172018");
+      infoGlyph.setAttribute("side", "double");
+      infoGlyph.setAttribute("raycast-pass-through", "");
+      infoGlyph.setAttribute("ui-depth-order", "order: 3");
+      hotspot.appendChild(infoGlyph);
+
       const labelButton = document.createElement("a-plane");
       labelButton.setAttribute("class", "clickable");
-      labelButton.setAttribute("width", "46");
-      labelButton.setAttribute("height", "12");
+      labelButton.setAttribute("width", `${infoLabelWidth}`);
+      labelButton.setAttribute("height", "14");
       labelButton.setAttribute("position", "0 11 0");
       labelButton.setAttribute(
         "material",
-        "shader: flat; color: #172018; opacity: 0.82; transparent: true",
+        "shader: flat; color: #172018; opacity: 0.62; transparent: true",
       );
       labelButton.setAttribute("side", "double");
       labelButton.setAttribute("ui-depth-order", "order: 1");
@@ -631,7 +667,10 @@ class HotspotManager {
       );
       label.setAttribute("align", "center");
       label.setAttribute("anchor", "center");
-      label.setAttribute("baseline", "bottom");
+      label.setAttribute(
+        "baseline",
+        hotspotData.type === "info" ? "center" : "bottom",
+      );
       // Wider width so the text is readable and increase scale for larger text
       label.setAttribute("width", hotspotData.type === "info" ? "38" : "30");
       label.setAttribute("scale", "6 6 6");
