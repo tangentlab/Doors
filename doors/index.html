@@ -236,11 +236,19 @@
         }
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        #info-button,
+        #info-panel,
+        #info-panel-backdrop {
+          transition: none;
+        }
+      }
+
     </style>
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20260730-sphere-info-panel"></script>
+    <script src="../js/hotspots.js?v=20260731-poi-render-order"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -374,7 +382,10 @@
       <!-- Camera + Cursor. -->
       <a-camera wasd-controls-enabled="false" look-controls>
         <!-- Use mouse rayOrigin for desktop pointer input (invisible entity). This enables mouse hover/click events on entities instead of the VR reticle. -->
-        <a-entity cursor="rayOrigin: mouse; fuse: false"></a-entity>
+        <a-entity
+          cursor="rayOrigin: mouse; fuse: false"
+          raycaster="objects: .clickable"
+        ></a-entity>
       </a-camera>
     </a-scene>
 
