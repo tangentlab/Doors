@@ -27,6 +27,19 @@ const SPACE_TITLES = {
   bottoms: "Bottoms",
 };
 
+const SPACE_INFO = {
+  entrance:
+    "The threshold into Doors. Take a moment to look around, listen, and select a marker in the landscape when you are ready to move deeper into the site.",
+  funnel:
+    "An enveloping sound field shaped by stream recordings, contact microphones, and granular textures. Turning through the space reveals routes into the surrounding landscape.",
+  heart:
+    "A resonant listening space where sound and place meet. Its musical character is inspired by physical locations and trees within the site.",
+  lookout:
+    "A quieter place for observation and context. The restrained interaction leaves room to attend to the wider landscape and its layered history.",
+  bottoms:
+    "An archive embedded in the landscape. This area gathers trail-camera images, soundscape compositions, plant knowledge, and other traces of the site.",
+};
+
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
 
@@ -64,6 +77,44 @@ AFRAME.registerComponent("face-camera", {
   },
 });
 
+// Decorative A-Frame text can sit in front of a hotspot and become the first
+// raycast intersection. Disable raycasting on those meshes so the cursor reaches
+// the actual button surface behind them.
+AFRAME.registerComponent("raycast-pass-through", {
+  init() {
+    const disableRaycast = () => {
+      this.el.object3D.traverse((object) => {
+        if (object.isMesh) object.raycast = () => {};
+      });
+    };
+    this.el.addEventListener("object3dset", disableRaycast);
+    disableRaycast();
+  },
+});
+
+AFRAME.registerComponent("ui-depth-order", {
+  schema: { order: { type: "number", default: 1 } },
+  init() {
+    const applyOrder = () => {
+      this.el.object3D.traverse((object) => {
+        object.renderOrder = this.data.order;
+        if (object.material) {
+          object.material.depthTest = false;
+          object.material.depthWrite = false;
+          object.material.needsUpdate = true;
+        }
+      });
+    };
+    this.el.addEventListener("object3dset", applyOrder);
+    applyOrder();
+  },
+});
+
+/**
+ * Add information POIs to an area's `infoHotspots` array. Each POI needs a
+ * unique id, spherical azimuth/elevation, title, and description. `label` and
+ * `color` are optional.
+ */
 const HOTSPOT_LAYOUTS = {
   entrance: {
     //
@@ -79,6 +130,16 @@ const HOTSPOT_LAYOUTS = {
         onClick: () => window.hotspotManager.changeVideo("funnel"),
       },
     ],
+    // infoHotspots: [
+    //   {
+    //     id: "entrance-info-threshold",
+    //     azimuth: 20,
+    //     elevation: 3,
+    //     title: "The Threshold",
+    //     description:
+    //       "This entrance marks the transition from the surrounding world into the recorded landscape. Pause here to notice how the site changes through image and sound.",
+    //   },
+    // ],
   },
   funnel: {
     radius: 250,
@@ -117,6 +178,16 @@ const HOTSPOT_LAYOUTS = {
         onClick: () => window.hotspotManager.changeVideo("lookout"),
       },
     ],
+    infoHotspots: [
+      {
+        id: "funnel-info-sound-field",
+        azimuth: 180,
+        elevation: 5,
+        title: "Sound Field",
+        description:
+          "Funnel combines stream recordings, contact microphones, and granular textures into an enveloping field. Turning through the space changes how these layers are perceived.",
+      },
+    ],
   },
   heart: {
     radius: 250,
@@ -145,6 +216,16 @@ const HOTSPOT_LAYOUTS = {
         label: "To Funnel",
         color: "#FFC0CB",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
+      },
+    ],
+    infoHotspots: [
+      {
+        id: "heart-info-resonance",
+        azimuth: 150,
+        elevation: 4,
+        title: "Site Resonance",
+        description:
+          "The musical character of Heart is inspired by physical locations and trees within the site, treating the landscape as a resonant instrument.",
       },
     ],
   },
@@ -177,6 +258,16 @@ const HOTSPOT_LAYOUTS = {
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
     ],
+    infoHotspots: [
+      {
+        id: "lookout-info-observation",
+        azimuth: 100,
+        elevation: 6,
+        title: "A Place to Observe",
+        description:
+          "Lookout is intentionally quiet and restrained, offering a place to attend to the wider landscape and the histories layered within it.",
+      },
+    ],
   },
   bottoms: {
     radius: 250,
@@ -197,6 +288,16 @@ const HOTSPOT_LAYOUTS = {
         label: "To Lookout",
         color: "#ff0000",
         onClick: () => window.hotspotManager.changeVideo("lookout"),
+      },
+    ],
+    infoHotspots: [
+      {
+        id: "bottoms-info-archive",
+        azimuth: 40,
+        elevation: 4,
+        title: "Living Archive",
+        description:
+          "Bottoms gathers traces of the site, including trail-camera images, soundscape compositions, plant knowledge, and other forms of shared observation.",
       },
     ],
   },
@@ -229,6 +330,15 @@ class HotspotManager {
     this.isTransitioning = false;
     /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
     this.currentHotspotAudio = null;
+    this.infoButton = document.querySelector("#info-button");
+    this.infoBackdrop = document.querySelector("#info-panel-backdrop");
+    this.infoPanel = document.querySelector("#info-panel");
+    this.infoCloseButton = document.querySelector("#info-close");
+    this.infoEyebrow = document.querySelector("#info-panel-eyebrow");
+    this.infoHeading = document.querySelector("#info-panel-heading");
+    this.infoDescription = document.querySelector("#info-panel-description");
+    this.lastInfoFocus = null;
+    this.infoCloseTimer = null;
 
     this.init();
   }
@@ -248,6 +358,92 @@ class HotspotManager {
 
     // Setup event listener for video changes
     this.setupVideoChangeListener();
+    this.setupInfoPanel();
+  }
+
+  setupInfoPanel() {
+    if (!this.infoButton || !this.infoBackdrop || !this.infoCloseButton) return;
+
+    this.infoButton.addEventListener("click", () => this.openInfoPanel());
+    this.infoCloseButton.addEventListener("click", () => this.closeInfoPanel());
+    this.infoBackdrop.addEventListener("click", (event) => {
+      if (event.target === this.infoBackdrop) this.closeInfoPanel();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.isInfoPanelOpen()) {
+        this.closeInfoPanel();
+      }
+      if (event.key === "Tab" && this.isInfoPanelOpen()) {
+        this.keepInfoFocusInside(event);
+      }
+    });
+  }
+
+  isInfoPanelOpen() {
+    return Boolean(this.infoBackdrop?.classList.contains("is-open"));
+  }
+
+  openInfoPanel(content = null) {
+    if (!this.infoBackdrop) return;
+    window.clearTimeout(this.infoCloseTimer);
+    this.lastInfoFocus = document.activeElement;
+    if (content) {
+      if (this.infoEyebrow) {
+        this.infoEyebrow.textContent = content.eyebrow || "Point of interest";
+      }
+      if (this.infoHeading) this.infoHeading.textContent = content.title;
+      if (this.infoDescription) {
+        this.infoDescription.textContent = content.description;
+      }
+    } else {
+      this.updateInfoPanel(this.currentVideoId);
+    }
+    this.infoBackdrop.hidden = false;
+    window.requestAnimationFrame(() => {
+      this.infoBackdrop.classList.add("is-open");
+      this.infoButton?.setAttribute("aria-expanded", "true");
+      this.infoCloseButton?.focus();
+    });
+  }
+
+  openInfoHotspot(hotspot) {
+    this.openInfoPanel({
+      eyebrow: "Point of interest",
+      title: hotspot.title,
+      description: hotspot.description,
+    });
+  }
+
+  closeInfoPanel({ restoreFocus = true } = {}) {
+    if (!this.infoBackdrop) return;
+    this.infoBackdrop.classList.remove("is-open");
+    this.infoButton?.setAttribute("aria-expanded", "false");
+
+    const finishClose = () => {
+      this.infoBackdrop.hidden = true;
+      if (restoreFocus) {
+        const focusTarget = this.lastInfoFocus || this.infoButton;
+        focusTarget?.focus();
+      }
+    };
+
+    this.infoCloseTimer = window.setTimeout(finishClose, 180);
+  }
+
+  keepInfoFocusInside(event) {
+    const focusable = this.infoPanel?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (!focusable?.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   setupVideoChangeListener() {
@@ -297,14 +493,27 @@ class HotspotManager {
     const layout = HOTSPOT_LAYOUTS[videoId];
     if (!layout) return;
 
-    const { radius, hotspots } = layout;
+    const { radius, hotspots = [], infoHotspots = [] } = layout;
 
     // Create hotspots
     hotspots.forEach((hotspot) => {
       this.createHotspot(hotspot, radius);
     });
 
-    this.currentHotspots = hotspots;
+    infoHotspots.forEach((hotspot) => {
+      this.createHotspot(
+        {
+          ...hotspot,
+          type: "info",
+          label: hotspot.label || hotspot.title,
+          color: hotspot.color || "#d6deae",
+          onClick: () => this.openInfoHotspot(hotspot),
+        },
+        radius,
+      );
+    });
+
+    this.currentHotspots = [...hotspots, ...infoHotspots];
     this.currentRadius = radius;
   }
 
@@ -329,9 +538,25 @@ class HotspotManager {
     hotspot.hotspotData = hotspotData;
     hotspot.radius = radius;
 
+    // One activation handler is shared by every raycastable part of a POI.
+    const activateHotspot = (e) => {
+      e.stopPropagation();
+      const clickSound = document.querySelector("#click-sound");
+      if (clickSound) {
+        try {
+          clickSound.currentTime = 0;
+          clickSound.play();
+        } catch (err) {
+          /* ignore autoplay/security errors */
+        }
+      }
+      hotspotData.onClick();
+    };
+
     // Visual representation (circle)
     const visual = document.createElement("a-circle");
-    visual.setAttribute("radius", "5");
+    visual.setAttribute("class", "clickable");
+    visual.setAttribute("radius", hotspotData.type === "info" ? "8" : "5");
     visual.setAttribute("color", hotspotData.color);
     visual.setAttribute("opacity", "0.8");
     // A-Frame circles and text have opposite front-face directions. Rendering
@@ -366,39 +591,102 @@ class HotspotManager {
       visual.object3D.scale.set(1, 1, 1);
     });
 
-    // Click handler (works for mouse & VR). Plays click sound, then runs onClick (space audio is played when entering the space)
-    visual.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const clickSound = document.querySelector("#click-sound");
-      if (clickSound) {
-        try {
-          clickSound.currentTime = 0;
-          clickSound.play();
-        } catch (err) {
-          /* ignore autoplay/security errors */
-        }
-      }
-      hotspotData.onClick();
-    });
+    // Click handler (works for mouse & VR).
+    visual.addEventListener("click", activateHotspot);
 
-    hotspot.appendChild(visual);
+    if (hotspotData.type !== "info") {
+      hotspot.appendChild(visual);
+    }
+
+    const infoLabelWidth = hotspotData.label
+      ? Math.min(96, Math.max(52, hotspotData.label.length * 4.5 + 12))
+      : 52;
+    const infoIconX = -(infoLabelWidth / 2 + 15);
+
+    if (hotspotData.type === "info") {
+      const infoButton = document.createElement("a-circle");
+      infoButton.setAttribute("class", "clickable");
+      infoButton.setAttribute("radius", "6");
+      infoButton.setAttribute("position", `${infoIconX} 11 0.2`);
+      infoButton.setAttribute("color", hotspotData.color);
+      infoButton.setAttribute("opacity", "0.95");
+      infoButton.setAttribute("side", "double");
+      infoButton.setAttribute("ui-depth-order", "order: 2");
+      infoButton.addEventListener("click", activateHotspot);
+      infoButton.addEventListener("mouseenter", () => {
+        document.body.style.cursor = "pointer";
+      });
+      infoButton.addEventListener("mouseleave", () => {
+        document.body.style.cursor = "";
+      });
+      hotspot.appendChild(infoButton);
+
+      const infoGlyph = document.createElement("a-text");
+      infoGlyph.setAttribute("value", "i");
+      infoGlyph.setAttribute("position", `${infoIconX} 11 0.4`);
+      infoGlyph.setAttribute("align", "center");
+      infoGlyph.setAttribute("anchor", "center");
+      infoGlyph.setAttribute("baseline", "center");
+      infoGlyph.setAttribute("width", "18");
+      infoGlyph.setAttribute("scale", "10 10 10");
+      infoGlyph.setAttribute("color", "#172018");
+      infoGlyph.setAttribute("side", "double");
+      infoGlyph.setAttribute("raycast-pass-through", "");
+      infoGlyph.setAttribute("ui-depth-order", "order: 3");
+      hotspot.appendChild(infoGlyph);
+
+      const labelButton = document.createElement("a-plane");
+      labelButton.setAttribute("class", "clickable");
+      labelButton.setAttribute("width", `${infoLabelWidth}`);
+      labelButton.setAttribute("height", "18");
+      labelButton.setAttribute("position", "0 11 0");
+      labelButton.setAttribute(
+        "material",
+        "shader: flat; color: #172018; opacity: 0.62; transparent: true",
+      );
+      labelButton.setAttribute("side", "double");
+      labelButton.setAttribute("ui-depth-order", "order: 1");
+      labelButton.addEventListener("click", activateHotspot);
+      labelButton.addEventListener("mouseenter", () => {
+        document.body.style.cursor = "pointer";
+      });
+      labelButton.addEventListener("mouseleave", () => {
+        document.body.style.cursor = "";
+      });
+      hotspot.appendChild(labelButton);
+    }
 
     // Optional: Add label (positioned above the hotspot and facing the camera)
     if (hotspotData.label) {
       const label = document.createElement("a-text");
       label.setAttribute("value", hotspotData.label);
       // Position above the visual circle (circle radius is 5)
-      label.setAttribute("position", "0 6 0");
+      label.setAttribute(
+        "position",
+        hotspotData.type === "info" ? "0 11 0.2" : "0 6 0",
+      );
       label.setAttribute("align", "center");
       label.setAttribute("anchor", "center");
-      label.setAttribute("baseline", "bottom");
+      label.setAttribute(
+        "baseline",
+        hotspotData.type === "info" ? "center" : "bottom",
+      );
       // Wider width so the text is readable and increase scale for larger text
-      label.setAttribute("width", "30");
+      label.setAttribute("width", hotspotData.type === "info" ? "38" : "30");
       label.setAttribute("scale", "6 6 6");
       // Keep color consistent with hotspot but use white if no color provided
-      label.setAttribute("color", hotspotData.color || "#FFFFFF");
+      label.setAttribute(
+        "color",
+        hotspotData.type === "info"
+          ? "#f3f1e9"
+          : hotspotData.color || "#FFFFFF",
+      );
       // Use double-sided so it remains visible from different angles
       label.setAttribute("side", "double");
+      if (hotspotData.type === "info") {
+        label.setAttribute("raycast-pass-through", "");
+        label.setAttribute("ui-depth-order", "order: 2");
+      }
 
       hotspot.appendChild(label);
     }
@@ -479,6 +767,18 @@ class HotspotManager {
   updateSpaceTitle(spaceId) {
     const title = document.querySelector("#space-title");
     if (title) title.textContent = SPACE_TITLES[spaceId] || spaceId;
+    this.updateInfoPanel(spaceId);
+  }
+
+  updateInfoPanel(spaceId) {
+    const spaceTitle = SPACE_TITLES[spaceId] || spaceId;
+    if (this.infoEyebrow) this.infoEyebrow.textContent = "About this place";
+    if (this.infoHeading) this.infoHeading.textContent = spaceTitle;
+    if (this.infoDescription) {
+      this.infoDescription.textContent =
+        SPACE_INFO[spaceId] || "Explore this place through sight and sound.";
+    }
+    this.infoButton?.setAttribute("aria-label", `About ${spaceTitle}`);
   }
 
   /**
@@ -508,6 +808,10 @@ class HotspotManager {
   // Method to change video
   async changeVideo(videoId) {
     if (this.isTransitioning || videoId === this.currentVideoId) return;
+
+    if (this.isInfoPanelOpen()) {
+      this.closeInfoPanel({ restoreFocus: false });
+    }
 
     const videoSphere = document.querySelector("#video-sphere");
     const newVideo = document.querySelector(`#${videoId}`);

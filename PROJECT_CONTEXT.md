@@ -112,10 +112,9 @@ There are at least two distinct hotspot types:
 These types should have related but distinguishable visual language and behavior.
 An information hotspot should never accidentally trigger navigation.
 
-Information content should initially appear within the experience rather than on a
-separate page. The final choice between an A-Frame panel, an accessible HTML
-overlay, or a hybrid of the two remains open. Whichever pattern is chosen must
-support closing, keyboard focus, touch, and reduced-motion preferences.
+Information content appears within the experience through in-scene A-Frame POIs
+and an accessible HTML overlay. This hybrid pattern supports closing, keyboard
+focus, touch, and reduced-motion preferences.
 
 Directional or gaze-reactive sound is a third interaction mode. It should respond
 continuously to camera orientation and should not require visible hotspots unless
@@ -189,6 +188,7 @@ It currently provides:
 - an iris-like visual transition between videos;
 - one selected HTML audio track per space;
 - desktop mouse raycasting.
+- configurable in-scene information POIs with accessible text panels;
 
 The current code uses A-Frame entities but coordinates most behavior through one
 imperative `HotspotManager`. There is almost no active direct Three.js code; the
@@ -198,7 +198,8 @@ A-Frame plus authored Three.js.
 Known gaps include:
 
 - initial area audio is blocked by browser autoplay policy;
-- informational hotspots and content panels are not implemented;
+- information POIs currently support text; image, audio, and archival media are
+  not yet implemented;
 - area audio restarts abruptly instead of crossfading;
 - sound is not yet spatial or direction-responsive;
 - interaction is primarily desktop-oriented;
