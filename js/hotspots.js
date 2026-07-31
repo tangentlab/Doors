@@ -599,8 +599,8 @@ class HotspotManager {
     }
 
     const infoLabelWidth = hotspotData.label
-      ? Math.min(84, Math.max(40, hotspotData.label.length * 4.5))
-      : 40;
+      ? Math.min(96, Math.max(52, hotspotData.label.length * 4.5 + 12))
+      : 52;
     const infoIconX = -(infoLabelWidth / 2 + 15);
 
     if (hotspotData.type === "info") {
@@ -638,7 +638,7 @@ class HotspotManager {
       const labelButton = document.createElement("a-plane");
       labelButton.setAttribute("class", "clickable");
       labelButton.setAttribute("width", `${infoLabelWidth}`);
-      labelButton.setAttribute("height", "14");
+      labelButton.setAttribute("height", "18");
       labelButton.setAttribute("position", "0 11 0");
       labelButton.setAttribute(
         "material",
