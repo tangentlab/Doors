@@ -42,6 +42,8 @@ const SPACE_INFO = {
 
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
+// Change to false to disable the zoom while keeping the iris transition.
+const SPHERE_TRANSITION_ZOOM_ENABLED = true;
 
 /**
  * Keep an entity's local +Z face aligned with the active camera.
@@ -339,7 +341,6 @@ class HotspotManager {
     this.infoDescription = document.querySelector("#info-panel-description");
     this.lastInfoFocus = null;
     this.infoCloseTimer = null;
-
     this.init();
   }
 
@@ -824,11 +825,19 @@ class HotspotManager {
       "--sphere-transition-duration",
       `${SPHERE_TRANSITION_DURATION_MS}ms`,
     );
+    document.body.style.setProperty(
+      "--sphere-transition-duration",
+      `${SPHERE_TRANSITION_DURATION_MS}ms`,
+    );
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (SPHERE_TRANSITION_ZOOM_ENABLED && !reducedMotion) {
+      document.body.classList.add("sphere-zoom-active");
+    }
     transition?.classList.add("is-active");
 
-    const transitionDuration = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches
+    const transitionDuration = reducedMotion
       ? 160
       : SPHERE_TRANSITION_DURATION_MS;
 
@@ -847,6 +856,7 @@ class HotspotManager {
       window.setTimeout(resolve, transitionDuration / 2),
     );
     transition?.classList.remove("is-active");
+    document.body.classList.remove("sphere-zoom-active");
     this.hotspotsContainer.setAttribute("visible", true);
     this.isTransitioning = false;
   }

@@ -52,6 +52,23 @@
         opacity: 1;
       }
 
+      /* A restrained push into the landscape, synchronized with the iris. */
+      body.sphere-zoom-active a-scene canvas {
+        animation: sphere-zoom var(--sphere-transition-duration, 1200ms)
+          cubic-bezier(0.65, 0, 0.35, 1) both;
+        transform-origin: center;
+      }
+
+      @keyframes sphere-zoom {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.28);
+        }
+      }
+
       @property --iris-inner {
         syntax: "<length>";
         inherits: false;
@@ -89,6 +106,10 @@
       @media (prefers-reduced-motion: reduce) {
         #sphere-transition.is-active::before {
           animation-duration: 160ms;
+        }
+
+        body.sphere-zoom-active a-scene canvas {
+          animation: none;
         }
       }
 
@@ -248,7 +269,7 @@
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20260731-padded-info-label"></script>
+    <script src="../js/hotspots.js?v=20260731-transition-zoom"></script>
 
     <script id="link" type="text/html">
       <a-entity
