@@ -135,6 +135,22 @@
         text-transform: uppercase;
       }
 
+      #direction-debug {
+        position: absolute;
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        left: 50%;
+        min-width: 8rem;
+        padding: 0.45rem 0.7rem;
+        border: 1px solid rgba(214, 222, 174, 0.55);
+        border-radius: 0.25rem;
+        background: rgba(5, 6, 7, 0.72);
+        color: #d6deae;
+        font: 600 0.75rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.08em;
+        text-align: center;
+        transform: translateX(-50%);
+      }
+
       #info-button {
         position: absolute;
         top: max(1rem, env(safe-area-inset-top));
@@ -269,7 +285,7 @@
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20260731-transition-zoom"></script>
+    <script src="../js/hotspots.js?v=20260731-direction-debug"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -288,6 +304,7 @@
   <body>
     <div id="ui-overlay">
       <div id="space-title" role="status" aria-live="polite">Entrance</div>
+      <output id="direction-debug" aria-label="Viewing direction" hidden></output>
       <button
         id="info-button"
         type="button"
