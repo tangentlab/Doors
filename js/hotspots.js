@@ -123,7 +123,7 @@ const HOTSPOT_LAYOUTS = {
       },
       {
         id: "funnel-lookout",
-        azimuth: 60,
+        azimuth: 40,
         elevation: 1,
         label: "To Lookout",
         color: "#AA96DA",
@@ -677,7 +677,6 @@ class HotspotManager {
     const layout = HOTSPOT_LAYOUTS[videoId];
     return layout ? layout.orientation : undefined;
   }
-
 }
 
 // Initialize on page load
