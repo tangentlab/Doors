@@ -135,6 +135,42 @@
         text-transform: uppercase;
       }
 
+      #season-control {
+        position: absolute;
+        top: max(1rem, env(safe-area-inset-top));
+        left: 50%;
+        display: grid;
+        gap: 0.25rem;
+        padding: 0.5rem 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 0.35rem;
+        background: rgba(5, 6, 7, 0.72);
+        color: #fff;
+        pointer-events: auto;
+        transform: translateX(-50%);
+      }
+
+      #season-control label {
+        color: #d6deae;
+        font: 600 0.62rem/1 system-ui, sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      #season-select {
+        min-width: 8rem;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        cursor: pointer;
+        font: 600 0.82rem/1.2 system-ui, sans-serif;
+      }
+
+      #season-select:focus-visible {
+        outline: 3px solid #d6deae;
+        outline-offset: 4px;
+      }
+
       #direction-debug {
         position: absolute;
         bottom: max(1rem, env(safe-area-inset-bottom));
@@ -304,6 +340,13 @@
   <body>
     <div id="ui-overlay">
       <div id="space-title" role="status" aria-live="polite">Entrance</div>
+      <div id="season-control">
+        <label for="season-select">Season</label>
+        <select id="season-select" aria-label="Choose a season">
+          <option value="winter">Winter</option>
+          <option value="spring">Spring</option>
+        </select>
+      </div>
       <output id="direction-debug" aria-label="Viewing direction" hidden></output>
       <button
         id="info-button"
@@ -406,6 +449,31 @@
           loop
           crossorigin="anonymous"
         ></video>
+        <img
+          id="spring-entrance"
+          src="../media/spring/LateSpring-Centre_West/1_Entrance_LateSpring.png"
+          crossorigin="anonymous"
+        />
+        <img
+          id="spring-funnel"
+          src="../media/spring/LateSpring-Centre_West/2_Funnel_LateSpring.png"
+          crossorigin="anonymous"
+        />
+        <img
+          id="spring-heart"
+          src="../media/spring/LateSpring-Centre_West/4_Heart_LateSpring.png"
+          crossorigin="anonymous"
+        />
+        <img
+          id="spring-lookout"
+          src="../media/spring/LateSpring-Centre_West/3_LookoutLateSpring.png"
+          crossorigin="anonymous"
+        />
+        <img
+          id="spring-bottoms"
+          src="../media/spring/LateSpring-Centre_West/5_Bottoms_LateSpring.png"
+          crossorigin="anonymous"
+        />
       </a-assets>
 
       <a-videosphere
