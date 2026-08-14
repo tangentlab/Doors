@@ -27,6 +27,23 @@ const SPACE_TITLES = {
   bottoms: "Bottoms",
 };
 
+const SEASON_ASSETS = {
+  winter: {
+    entrance: "entrance",
+    funnel: "funnel",
+    heart: "heart",
+    lookout: "lookout",
+    bottoms: "bottoms",
+  },
+  spring: {
+    entrance: "spring-entrance",
+    funnel: "spring-funnel",
+    heart: "spring-heart",
+    lookout: "spring-lookout",
+    bottoms: "spring-bottoms",
+  },
+};
+
 const SPACE_INFO = {
   entrance:
     "The threshold into Doors. Take a moment to look around, listen, and select a marker in the landscape when you are ready to move deeper into the site.",
@@ -117,8 +134,12 @@ AFRAME.registerComponent("ui-depth-order", {
 /**
  * Add information POIs to an area's `infoHotspots` array. Each POI needs a
  * unique id, spherical azimuth/elevation, title, and description. `label` and
- * `color` are optional.
+ * `color` are optional. Navigation links use the shared colors below so they
+ * remain visually consistent across every area.
  */
+const LINK_HOTSPOT_COLOR = "#d6deae";
+const LINK_HOTSPOT_CONTRAST = "#172018";
+
 const HOTSPOT_LAYOUTS = {
   entrance: {
     //
@@ -130,7 +151,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 90,
         elevation: 1,
         label: "To Funnel",
-        color: "#00839a",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
       },
     ],
@@ -154,7 +174,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 270,
         elevation: 1,
         label: "To Entrance",
-        color: "#95E1D3",
         onClick: () => window.hotspotManager.changeVideo("entrance"),
       },
       {
@@ -162,7 +181,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 90,
         elevation: 1,
         label: "To Bottoms",
-        color: "#F38181",
         onClick: () => window.hotspotManager.changeVideo("bottoms"),
       },
       {
@@ -170,7 +188,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 105,
         elevation: 1,
         label: "To Heart",
-        color: "#F38181",
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
       {
@@ -178,7 +195,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 40,
         elevation: 1,
         label: "To Lookout",
-        color: "#AA96DA",
         onClick: () => window.hotspotManager.changeVideo("lookout"),
       },
     ],
@@ -202,7 +218,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 90,
         elevation: 1,
         label: "To Bottoms",
-        color: "#ff0000",
         onClick: () => window.hotspotManager.changeVideo("bottoms"),
       },
       {
@@ -210,7 +225,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 0,
         elevation: 1,
         label: "To Lookout",
-        color: "#FFB6C1",
         onClick: () => window.hotspotManager.changeVideo("lookout"),
       },
       {
@@ -218,7 +232,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 270,
         elevation: 1,
         label: "To Funnel",
-        color: "#FFC0CB",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
       },
     ],
@@ -242,7 +255,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: -45,
         elevation: 1,
         label: "To Funnel",
-        color: "#FFD700",
         onClick: () => window.hotspotManager.changeVideo("funnel"),
       },
       {
@@ -250,7 +262,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 200,
         elevation: 1,
         label: "To Bottoms",
-        color: "#ff8c00",
         onClick: () => window.hotspotManager.changeVideo("bottoms"),
       },
       {
@@ -258,7 +269,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 280,
         elevation: 1,
         label: "To Heart",
-        color: "#87CEEB",
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
     ],
@@ -282,7 +292,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: 270,
         elevation: 1,
         label: "To Heart",
-        color: "#00CED1",
         onClick: () => window.hotspotManager.changeVideo("heart"),
       },
       {
@@ -290,7 +299,6 @@ const HOTSPOT_LAYOUTS = {
         azimuth: -60,
         elevation: 1,
         label: "To Lookout",
-        color: "#ff0000",
         onClick: () => window.hotspotManager.changeVideo("lookout"),
       },
     ],
@@ -331,6 +339,7 @@ class HotspotManager {
     this.currentHotspots = [];
     this.hotspotsContainer = null;
     this.currentVideoId = "entrance";
+    this.currentSeason = "winter";
     this.isTransitioning = false;
     // Remember the last leg so an immediate return can face back along it.
     this.lastJourney = null;
@@ -344,6 +353,7 @@ class HotspotManager {
     this.infoHeading = document.querySelector("#info-panel-heading");
     this.infoDescription = document.querySelector("#info-panel-description");
     this.directionDebug = document.querySelector("#direction-debug");
+    this.seasonSelect = document.querySelector("#season-select");
     this.viewDirection = new THREE.Vector3();
     this.lastDirectionLabel = "";
     this.lastInfoFocus = null;
@@ -366,11 +376,24 @@ class HotspotManager {
 
     // Setup event listener for video changes
     this.setupVideoChangeListener();
+    this.setupSeasonSelector();
     this.setupInfoPanel();
     if (DIRECTION_DEBUG_ENABLED && this.directionDebug) {
       this.directionDebug.hidden = false;
       this.updateDirectionDebug();
     }
+  }
+
+  setupSeasonSelector() {
+    if (!this.seasonSelect) return;
+    this.seasonSelect.value = this.currentSeason;
+    this.seasonSelect.addEventListener("change", () => {
+      this.changeSeason(this.seasonSelect.value);
+    });
+  }
+
+  getAssetId(spaceId, season = this.currentSeason) {
+    return SEASON_ASSETS[season]?.[spaceId] || null;
   }
 
   updateDirectionDebug() {
@@ -497,11 +520,15 @@ class HotspotManager {
       );
     }
 
-    // Listen for video source changes
+    // Listen for panorama source changes (Winter video or Spring image).
     const observer = new MutationObserver(() => {
       const currentSrc = videoSphere.getAttribute("src");
       if (currentSrc) {
-        const videoId = currentSrc.replace("#", "");
+        const assetId = currentSrc.replace("#", "");
+        const videoId = Object.keys(SEASON_ASSETS[this.currentSeason]).find(
+          (spaceId) => SEASON_ASSETS[this.currentSeason][spaceId] === assetId,
+        );
+        if (!videoId) return;
         if (videoId !== this.currentVideoId) {
           this.currentVideoId = videoId;
           this.loadHotspotsForVideo(videoId);
@@ -517,6 +544,45 @@ class HotspotManager {
       attributes: true,
       attributeFilter: ["src"],
     });
+  }
+
+  async changeSeason(season) {
+    if (
+      this.isTransitioning ||
+      season === this.currentSeason ||
+      !SEASON_ASSETS[season]
+    ) {
+      if (this.seasonSelect) this.seasonSelect.value = this.currentSeason;
+      return;
+    }
+
+    const assetId = this.getAssetId(this.currentVideoId, season);
+    const asset = assetId && document.querySelector(`#${assetId}`);
+    const transition = document.querySelector("#sphere-transition");
+    if (!asset || !this.videoSphere) return;
+
+    this.isTransitioning = true;
+    this.hotspotsContainer.setAttribute("visible", false);
+    transition?.classList.add("is-active");
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const duration = reducedMotion ? 160 : SPHERE_TRANSITION_DURATION_MS;
+
+    await new Promise((resolve) => window.setTimeout(resolve, duration / 2));
+    this.currentSeason = season;
+    this.videoSphere.setAttribute("src", `#${assetId}`);
+    if (asset instanceof HTMLVideoElement) {
+      asset.play().catch((error) => console.log("Autoplay prevented:", error));
+    }
+    document.querySelectorAll("a-assets video").forEach((video) => {
+      if (video !== asset) video.pause();
+    });
+
+    await new Promise((resolve) => window.setTimeout(resolve, duration / 2));
+    transition?.classList.remove("is-active");
+    this.hotspotsContainer.setAttribute("visible", true);
+    this.isTransitioning = false;
   }
 
   loadHotspotsForVideo(videoId) {
@@ -587,12 +653,31 @@ class HotspotManager {
       hotspotData.onClick();
     };
 
+    const hotspotColor =
+      hotspotData.type === "info"
+        ? hotspotData.color
+        : LINK_HOTSPOT_COLOR;
+
+    // A dark outer ring gives navigation links a stable edge against both
+    // light and dark parts of the panoramic footage.
+    if (hotspotData.type !== "info") {
+      const contrastRing = document.createElement("a-circle");
+      contrastRing.setAttribute("radius", "6.5");
+      contrastRing.setAttribute("position", "0 0 -0.1");
+      contrastRing.setAttribute("color", LINK_HOTSPOT_CONTRAST);
+      contrastRing.setAttribute("opacity", "0.9");
+      contrastRing.setAttribute("side", "double");
+      contrastRing.setAttribute("ui-depth-order", "order: 1");
+      hotspot.appendChild(contrastRing);
+    }
+
     // Visual representation (circle)
     const visual = document.createElement("a-circle");
     visual.setAttribute("class", "clickable");
     visual.setAttribute("radius", hotspotData.type === "info" ? "8" : "5");
-    visual.setAttribute("color", hotspotData.color);
-    visual.setAttribute("opacity", "0.8");
+    visual.setAttribute("color", hotspotColor);
+    visual.setAttribute("opacity", "0.95");
+    visual.setAttribute("ui-depth-order", "order: 2");
     // A-Frame circles and text have opposite front-face directions. Rendering
     // both sides keeps the button visible and raycastable while its parent
     // billboards toward the camera.
@@ -607,7 +692,7 @@ class HotspotManager {
       "event-set__mouseenter",
       "scale: 1.3 1.3 1.3; opacity: 1",
     );
-    visual.setAttribute("event-set__mouseleave", "scale: 1 1 1; opacity: 0.8");
+    visual.setAttribute("event-set__mouseleave", "scale: 1 1 1; opacity: 0.95");
 
     // Change OS mouse cursor when hovering hotspots (desktop)
     visual.addEventListener("mouseenter", () => {
@@ -692,12 +777,30 @@ class HotspotManager {
 
     // Optional: Add label (positioned above the hotspot and facing the camera)
     if (hotspotData.label) {
+      if (hotspotData.type !== "info") {
+        const labelWidth = Math.min(
+          70,
+          Math.max(34, hotspotData.label.length * 3.6 + 10),
+        );
+        const labelBackdrop = document.createElement("a-plane");
+        labelBackdrop.setAttribute("width", `${labelWidth}`);
+        labelBackdrop.setAttribute("height", "11");
+        labelBackdrop.setAttribute("position", "0 10 -0.1");
+        labelBackdrop.setAttribute(
+          "material",
+          `shader: flat; color: ${LINK_HOTSPOT_CONTRAST}; opacity: 0.82; transparent: true`,
+        );
+        labelBackdrop.setAttribute("side", "double");
+        labelBackdrop.setAttribute("ui-depth-order", "order: 1");
+        hotspot.appendChild(labelBackdrop);
+      }
+
       const label = document.createElement("a-text");
       label.setAttribute("value", hotspotData.label);
       // Position above the visual circle (circle radius is 5)
       label.setAttribute(
         "position",
-        hotspotData.type === "info" ? "0 11 0.2" : "0 6 0",
+        hotspotData.type === "info" ? "0 11 0.2" : "0 10 0.2",
       );
       label.setAttribute("align", "center");
       label.setAttribute("anchor", "center");
@@ -708,18 +811,17 @@ class HotspotManager {
       // Wider width so the text is readable and increase scale for larger text
       label.setAttribute("width", hotspotData.type === "info" ? "38" : "30");
       label.setAttribute("scale", "6 6 6");
-      // Keep color consistent with hotspot but use white if no color provided
       label.setAttribute(
         "color",
         hotspotData.type === "info"
           ? "#f3f1e9"
-          : hotspotData.color || "#FFFFFF",
+          : LINK_HOTSPOT_COLOR,
       );
       // Use double-sided so it remains visible from different angles
       label.setAttribute("side", "double");
+      label.setAttribute("ui-depth-order", "order: 2");
       if (hotspotData.type === "info") {
         label.setAttribute("raycast-pass-through", "");
-        label.setAttribute("ui-depth-order", "order: 2");
       }
 
       hotspot.appendChild(label);
@@ -857,7 +959,8 @@ class HotspotManager {
     }
 
     const videoSphere = document.querySelector("#video-sphere");
-    const newVideo = document.querySelector(`#${videoId}`);
+    const assetId = this.getAssetId(videoId);
+    const newVideo = assetId && document.querySelector(`#${assetId}`);
     const transition = document.querySelector("#sphere-transition");
     if (!videoSphere || !newVideo) return;
 
@@ -887,15 +990,17 @@ class HotspotManager {
     await new Promise((resolve) =>
       window.setTimeout(resolve, transitionDuration / 2),
     );
-    videoSphere.setAttribute("src", `#${videoId}`);
+    videoSphere.setAttribute("src", `#${assetId}`);
     this.setViewHeading(arrivalHeading);
     this.lastJourney = isReturnJourney
       ? null
       : { from: fromVideoId, to: videoId, heading: departureHeading };
-    try {
-      await newVideo.play();
-    } catch (error) {
-      console.log("Autoplay prevented:", error);
+    if (newVideo instanceof HTMLVideoElement) {
+      try {
+        await newVideo.play();
+      } catch (error) {
+        console.log("Autoplay prevented:", error);
+      }
     }
 
     await new Promise((resolve) =>

@@ -181,7 +181,8 @@ The active prototype is `doors/index.html`, supported primarily by
 
 It currently provides:
 
-- five 360° video assets: Entrance, Funnel, Heart, Lookout, and Bottoms;
+- a season selector that keeps the visitor in the same place while switching
+  between five Winter 360° videos and five Late Spring panoramic images;
 - dynamically created A-Frame navigation hotspots;
 - spherical-coordinate hotspot placement;
 - per-video orientation;
