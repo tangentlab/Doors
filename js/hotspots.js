@@ -63,6 +63,8 @@ const SPHERE_TRANSITION_DURATION_MS = 1700;
 const SPHERE_TRANSITION_ZOOM_ENABLED = true;
 // Change to false to remove the compass debugging label.
 const DIRECTION_DEBUG_ENABLED = true;
+// Hotspot text outline thickness.
+const HOTSPOT_TEXT_OUTLINE_THICKNESS = 1;
 
 /**
  * Keep an entity's local +Z face aligned with the active camera.
@@ -405,7 +407,8 @@ class HotspotManager {
           Math.PI,
       );
       const directions = ["NORTH", "EAST", "SOUTH", "WEST"];
-      const direction = directions[Math.round(heading / 90) % directions.length];
+      const direction =
+        directions[Math.round(heading / 90) % directions.length];
       const degrees = String(Math.round(heading) % 360).padStart(3, "0");
       const label = `${direction} · ${degrees}°`;
       if (label !== this.lastDirectionLabel) {
@@ -654,9 +657,7 @@ class HotspotManager {
     };
 
     const hotspotColor =
-      hotspotData.type === "info"
-        ? hotspotData.color
-        : LINK_HOTSPOT_COLOR;
+      hotspotData.type === "info" ? hotspotData.color : LINK_HOTSPOT_COLOR;
 
     // A dark outer ring gives navigation links a stable edge against both
     // light and dark parts of the panoramic footage.
@@ -753,76 +754,61 @@ class HotspotManager {
       infoGlyph.setAttribute("raycast-pass-through", "");
       infoGlyph.setAttribute("ui-depth-order", "order: 3");
       hotspot.appendChild(infoGlyph);
-
-      const labelButton = document.createElement("a-plane");
-      labelButton.setAttribute("class", "clickable");
-      labelButton.setAttribute("width", `${infoLabelWidth}`);
-      labelButton.setAttribute("height", "18");
-      labelButton.setAttribute("position", "0 11 0");
-      labelButton.setAttribute(
-        "material",
-        "shader: flat; color: #172018; opacity: 0.62; transparent: true",
-      );
-      labelButton.setAttribute("side", "double");
-      labelButton.setAttribute("ui-depth-order", "order: 1");
-      labelButton.addEventListener("click", activateHotspot);
-      labelButton.addEventListener("mouseenter", () => {
-        document.body.style.cursor = "pointer";
-      });
-      labelButton.addEventListener("mouseleave", () => {
-        document.body.style.cursor = "";
-      });
-      hotspot.appendChild(labelButton);
     }
 
     // Optional: Add label (positioned above the hotspot and facing the camera)
     if (hotspotData.label) {
-      if (hotspotData.type !== "info") {
-        const labelWidth = Math.min(
-          70,
-          Math.max(34, hotspotData.label.length * 3.6 + 10),
-        );
-        const labelBackdrop = document.createElement("a-plane");
-        labelBackdrop.setAttribute("width", `${labelWidth}`);
-        labelBackdrop.setAttribute("height", "11");
-        labelBackdrop.setAttribute("position", "0 10 -0.1");
-        labelBackdrop.setAttribute(
-          "material",
-          `shader: flat; color: ${LINK_HOTSPOT_CONTRAST}; opacity: 0.82; transparent: true`,
-        );
-        labelBackdrop.setAttribute("side", "double");
-        labelBackdrop.setAttribute("ui-depth-order", "order: 1");
-        hotspot.appendChild(labelBackdrop);
-      }
+      const isInfoHotspot = hotspotData.type === "info";
+      const labelY = isInfoHotspot ? 11 : 10;
+      const labelBaseline = isInfoHotspot ? "center" : "bottom";
+      const labelWidth = isInfoHotspot ? "38" : "30";
+
+      // Layer dark text copies behind the label to create an outline without
+      // using a rectangular back panel.
+      const diagonalOutlineOffset = HOTSPOT_TEXT_OUTLINE_THICKNESS / Math.SQRT2;
+      [
+        [-HOTSPOT_TEXT_OUTLINE_THICKNESS, 0],
+        [HOTSPOT_TEXT_OUTLINE_THICKNESS, 0],
+        [0, -HOTSPOT_TEXT_OUTLINE_THICKNESS],
+        [0, HOTSPOT_TEXT_OUTLINE_THICKNESS],
+        [-diagonalOutlineOffset, -diagonalOutlineOffset],
+        [-diagonalOutlineOffset, diagonalOutlineOffset],
+        [diagonalOutlineOffset, -diagonalOutlineOffset],
+        [diagonalOutlineOffset, diagonalOutlineOffset],
+      ].forEach(([offsetX, offsetY]) => {
+        const outline = document.createElement("a-text");
+        outline.setAttribute("value", hotspotData.label);
+        outline.setAttribute("position", `${offsetX} ${labelY + offsetY} 0.1`);
+        outline.setAttribute("align", "center");
+        outline.setAttribute("anchor", "center");
+        outline.setAttribute("baseline", labelBaseline);
+        outline.setAttribute("width", labelWidth);
+        outline.setAttribute("scale", "6 6 6");
+        outline.setAttribute("color", "#172018");
+        outline.setAttribute("side", "double");
+        outline.setAttribute("raycast-pass-through", "");
+        outline.setAttribute("ui-depth-order", "order: 2");
+        hotspot.appendChild(outline);
+      });
 
       const label = document.createElement("a-text");
       label.setAttribute("value", hotspotData.label);
       // Position above the visual circle (circle radius is 5)
-      label.setAttribute(
-        "position",
-        hotspotData.type === "info" ? "0 11 0.2" : "0 10 0.2",
-      );
+      label.setAttribute("position", `0 ${labelY} 0.2`);
       label.setAttribute("align", "center");
       label.setAttribute("anchor", "center");
-      label.setAttribute(
-        "baseline",
-        hotspotData.type === "info" ? "center" : "bottom",
-      );
+      label.setAttribute("baseline", labelBaseline);
       // Wider width so the text is readable and increase scale for larger text
-      label.setAttribute("width", hotspotData.type === "info" ? "38" : "30");
+      label.setAttribute("width", labelWidth);
       label.setAttribute("scale", "6 6 6");
       label.setAttribute(
         "color",
-        hotspotData.type === "info"
-          ? "#f3f1e9"
-          : LINK_HOTSPOT_COLOR,
+        isInfoHotspot ? "#f3f1e9" : LINK_HOTSPOT_COLOR,
       );
       // Use double-sided so it remains visible from different angles
       label.setAttribute("side", "double");
-      label.setAttribute("ui-depth-order", "order: 2");
-      if (hotspotData.type === "info") {
-        label.setAttribute("raycast-pass-through", "");
-      }
+      label.setAttribute("raycast-pass-through", "");
+      label.setAttribute("ui-depth-order", "order: 3");
 
       hotspot.appendChild(label);
     }
