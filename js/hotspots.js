@@ -63,6 +63,8 @@ const SPHERE_TRANSITION_DURATION_MS = 1700;
 const SPHERE_TRANSITION_ZOOM_ENABLED = true;
 // Change to false to remove the compass debugging label.
 const DIRECTION_DEBUG_ENABLED = true;
+// Hotspot text outline thickness.
+const HOTSPOT_TEXT_OUTLINE_THICKNESS = 1;
 
 /**
  * Keep an entity's local +Z face aligned with the active camera.
@@ -405,7 +407,8 @@ class HotspotManager {
           Math.PI,
       );
       const directions = ["NORTH", "EAST", "SOUTH", "WEST"];
-      const direction = directions[Math.round(heading / 90) % directions.length];
+      const direction =
+        directions[Math.round(heading / 90) % directions.length];
       const degrees = String(Math.round(heading) % 360).padStart(3, "0");
       const label = `${direction} · ${degrees}°`;
       if (label !== this.lastDirectionLabel) {
@@ -654,9 +657,7 @@ class HotspotManager {
     };
 
     const hotspotColor =
-      hotspotData.type === "info"
-        ? hotspotData.color
-        : LINK_HOTSPOT_COLOR;
+      hotspotData.type === "info" ? hotspotData.color : LINK_HOTSPOT_COLOR;
 
     // A dark outer ring gives navigation links a stable edge against both
     // light and dark parts of the panoramic footage.
@@ -753,7 +754,6 @@ class HotspotManager {
       infoGlyph.setAttribute("raycast-pass-through", "");
       infoGlyph.setAttribute("ui-depth-order", "order: 3");
       hotspot.appendChild(infoGlyph);
-
     }
 
     // Optional: Add label (positioned above the hotspot and facing the camera)
@@ -765,22 +765,20 @@ class HotspotManager {
 
       // Layer dark text copies behind the label to create an outline without
       // using a rectangular back panel.
+      const diagonalOutlineOffset = HOTSPOT_TEXT_OUTLINE_THICKNESS / Math.SQRT2;
       [
-        [-0.64, 0],
-        [0.64, 0],
-        [0, -0.64],
-        [0, 0.64],
-        [-0.46, -0.46],
-        [-0.46, 0.46],
-        [0.46, -0.46],
-        [0.46, 0.46],
+        [-HOTSPOT_TEXT_OUTLINE_THICKNESS, 0],
+        [HOTSPOT_TEXT_OUTLINE_THICKNESS, 0],
+        [0, -HOTSPOT_TEXT_OUTLINE_THICKNESS],
+        [0, HOTSPOT_TEXT_OUTLINE_THICKNESS],
+        [-diagonalOutlineOffset, -diagonalOutlineOffset],
+        [-diagonalOutlineOffset, diagonalOutlineOffset],
+        [diagonalOutlineOffset, -diagonalOutlineOffset],
+        [diagonalOutlineOffset, diagonalOutlineOffset],
       ].forEach(([offsetX, offsetY]) => {
         const outline = document.createElement("a-text");
         outline.setAttribute("value", hotspotData.label);
-        outline.setAttribute(
-          "position",
-          `${offsetX} ${labelY + offsetY} 0.1`,
-        );
+        outline.setAttribute("position", `${offsetX} ${labelY + offsetY} 0.1`);
         outline.setAttribute("align", "center");
         outline.setAttribute("anchor", "center");
         outline.setAttribute("baseline", labelBaseline);
@@ -805,9 +803,7 @@ class HotspotManager {
       label.setAttribute("scale", "6 6 6");
       label.setAttribute(
         "color",
-        isInfoHotspot
-          ? "#f3f1e9"
-          : LINK_HOTSPOT_COLOR,
+        isInfoHotspot ? "#f3f1e9" : LINK_HOTSPOT_COLOR,
       );
       // Use double-sided so it remains visible from different angles
       label.setAttribute("side", "double");
