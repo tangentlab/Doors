@@ -42,6 +42,13 @@ const SEASON_ASSETS = {
     lookout: "spring-lookout",
     bottoms: "spring-bottoms",
   },
+  summer: {
+    entrance: "summer-entrance",
+    funnel: "summer-funnel",
+    heart: "summer-heart",
+    lookout: "summer-lookout",
+    bottoms: "summer-bottoms",
+  },
 };
 
 const SPACE_INFO = {
@@ -523,7 +530,7 @@ class HotspotManager {
       );
     }
 
-    // Listen for panorama source changes (Winter video or Spring image).
+    // Listen for panorama source changes across seasons.
     const observer = new MutationObserver(() => {
       const currentSrc = videoSphere.getAttribute("src");
       if (currentSrc) {
