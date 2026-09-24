@@ -1,0 +1,14 @@
+{
+  "model": "haodongli/DA-2",
+  "source_frame_seconds": 10,
+  "width": 1092,
+  "height": 546,
+  "points": 596232,
+  "preview_points": 149058,
+  "device": "mps",
+  "distance_min": 0.04334503039717674,
+  "distance_median": 0.2549813985824585,
+  "distance_max": 1.4735572338104248,
+  "scale": "relative, not calibrated metres",
+  "sky_and_tripod": "unmasked in this first diagnostic export"
+}

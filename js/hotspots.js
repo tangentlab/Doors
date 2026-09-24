@@ -601,6 +601,7 @@ class HotspotManager {
 
     // Get hotspots for this video
     const layout = HOTSPOT_LAYOUTS[videoId];
+    this.createSpaceTitle(videoId, layout);
     if (!layout) return;
 
     const { radius, hotspots = [], infoHotspots = [] } = layout;
@@ -625,6 +626,42 @@ class HotspotManager {
 
     this.currentHotspots = [...hotspots, ...infoHotspots];
     this.currentRadius = radius;
+  }
+
+  createSpaceTitle(spaceId, layout) {
+    // Keep the title in the landscape, above the navigation markers. Placement
+    // can be overridden per space with titlePosition: { azimuth, elevation }.
+    const position = sphericalToCartesian(
+      200,
+      layout?.titlePosition?.azimuth ?? layout?.orientation ?? 0,
+      layout?.titlePosition?.elevation ?? 18,
+    );
+    const title = document.createElement("a-entity");
+    title.id = "floating-space-title";
+    title.setAttribute("position", position);
+    title.setAttribute("face-camera", "");
+
+    // A small dark offset keeps the floating letters legible over bright video.
+    [
+      { color: "#172018", position: "0.45 -0.45 -0.1" },
+      { color: "#f3f1e9", position: "0 0 0" },
+    ].forEach((layer) => {
+      const text = document.createElement("a-text");
+      text.setAttribute("value", SPACE_TITLES[spaceId] || "Untitled Space");
+      text.setAttribute("align", "center");
+      text.setAttribute("anchor", "center");
+      text.setAttribute("baseline", "center");
+      text.setAttribute("width", 90);
+      text.setAttribute("wrap-count", 18);
+      text.setAttribute("color", layer.color);
+      text.setAttribute("position", layer.position);
+      text.setAttribute("side", "double");
+      text.setAttribute("raycast-pass-through", "");
+      title.appendChild(text);
+    });
+
+    // Share hotspot lifetime and transition visibility across spaces/seasons.
+    this.hotspotsContainer.appendChild(title);
   }
 
   createHotspot(hotspotData, radius) {
