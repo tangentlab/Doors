@@ -27,6 +27,45 @@ const SPACE_TITLES = {
   bottoms: "Bottoms",
 };
 
+const SPACE_TEXT_MODELS = {
+  entrance: "Entry_Sep30.gltf",
+  funnel: "FUNNEL_Sep30.gltf",
+  heart: "Heart_Sep30.gltf",
+  lookout: "Lookout_Sep30.gltf",
+  bottoms: "Bottoms_Sep30.gltf",
+};
+
+// Fit the authored letters to a consistent world-space height.
+AFRAME.registerComponent("environment-model", {
+  init() {
+    this.onLoaded = () => {
+      const model = this.el.getObject3D("mesh");
+      if (!model) return;
+      // Measure in model coordinates, independent of the panorama's rotation.
+      model.updateWorldMatrix(true, true);
+      const inverse = model.matrixWorld.clone().invert();
+      const bounds = new THREE.Box3();
+      model.traverse((object) => {
+        if (!object.isMesh) return;
+        object.geometry.computeBoundingBox();
+        const transform = new THREE.Matrix4().multiplyMatrices(inverse, object.matrixWorld);
+        bounds.union(object.geometry.boundingBox.clone().applyMatrix4(transform));
+      });
+      const size = bounds.getSize(new THREE.Vector3());
+      if (!Number.isFinite(size.y) || size.y <= 0) return;
+      const center = bounds.getCenter(new THREE.Vector3());
+      const scale = 17 / size.y;
+      model.scale.setScalar(scale);
+      model.position.copy(center).multiplyScalar(-scale);
+      this.el.parentElement.querySelector("a-text")?.setAttribute("visible", false);
+    };
+    this.el.addEventListener("model-loaded", this.onLoaded);
+  },
+  remove() {
+    this.el.removeEventListener("model-loaded", this.onLoaded);
+  },
+});
+
 const SEASON_ASSETS = {
   winter: {
     entrance: "entrance",
@@ -81,6 +120,7 @@ const HOTSPOT_TEXT_OUTLINE_THICKNESS = 1;
  * space keeps the entire hotspot (button and label) facing the viewer.
  */
 AFRAME.registerComponent("face-camera", {
+  schema: { positiveZ: { default: false } },
   init() {
     this.cameraWorldPosition = new THREE.Vector3();
     this.cameraParentPosition = new THREE.Vector3();
@@ -99,8 +139,8 @@ AFRAME.registerComponent("face-camera", {
     // Build the facing rotation entirely in the hotspot parent's coordinate
     // space. This avoids Object3D.lookAt's limitations with rotated parents.
     this.lookAtMatrix.lookAt(
-      this.el.object3D.position,
-      this.cameraParentPosition,
+      this.data.positiveZ ? this.cameraParentPosition : this.el.object3D.position,
+      this.data.positiveZ ? this.el.object3D.position : this.cameraParentPosition,
       this.el.object3D.up,
     );
     this.el.object3D.quaternion.setFromRotationMatrix(this.lookAtMatrix);
@@ -896,7 +936,39 @@ class HotspotManager {
   updateSpaceTitle(spaceId) {
     const title = document.querySelector("#space-title");
     if (title) title.textContent = SPACE_TITLES[spaceId] || spaceId;
+    this.updateEnvironmentModel(spaceId);
     this.updateInfoPanel(spaceId);
+  }
+
+  updateEnvironmentModel(spaceId) {
+    if (this.environmentModelSpace === spaceId) return;
+    this.environmentModelSpace = spaceId;
+    this.environmentTitle?.remove();
+
+    const title = document.createElement("a-entity");
+    title.id = "3dtext";
+    const position = sphericalToCartesian(250, 0, 15);
+    title.setAttribute("position", position);
+    title.setAttribute("face-camera", "positiveZ: false");
+    const fallback = document.createElement("a-text");
+    fallback.setAttribute("value", SPACE_TITLES[spaceId] || spaceId);
+    fallback.setAttribute("align", "center");
+    fallback.setAttribute("width", "100");
+    fallback.setAttribute("side", "double");
+    fallback.setAttribute("raycast-pass-through", "");
+    title.appendChild(fallback);
+
+    const file = SPACE_TEXT_MODELS[spaceId];
+    if (file) {
+      const model = document.createElement("a-entity");
+      model.setAttribute("environment-model", "");
+      model.setAttribute("raycast-pass-through", "");
+      model.setAttribute("gltf-model", `url(../media/models/GLTF_SEP30/${file})`);
+      title.appendChild(model);
+    }
+    // Anchor to the panorama so the title stays in the environment while panning.
+    (this.videoSphere || this.scene).appendChild(title);
+    this.environmentTitle = title;
   }
 
   updateInfoPanel(spaceId) {
