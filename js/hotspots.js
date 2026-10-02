@@ -120,14 +120,23 @@ const HOTSPOT_TEXT_OUTLINE_THICKNESS = 1;
  * space keeps the entire hotspot (button and label) facing the viewer.
  */
 AFRAME.registerComponent("face-camera", {
-  schema: { positiveZ: { default: false } },
+  schema: {
+    positiveZ: { default: false },
+    yawFollow: { default: 0 },
+    maxYaw: { default: 8 },
+  },
   init() {
     this.cameraWorldPosition = new THREE.Vector3();
     this.cameraParentPosition = new THREE.Vector3();
     this.lookAtMatrix = new THREE.Matrix4();
+    this.viewDirection = new THREE.Vector3();
+    this.titleDirection = new THREE.Vector3();
+    this.yawQuaternion = new THREE.Quaternion();
+    this.yawAxis = new THREE.Vector3(0, 1, 0);
+    this.followYaw = 0;
   },
 
-  tick() {
+  tick(time, delta) {
     const camera = this.el.sceneEl && this.el.sceneEl.camera;
     const parent = this.el.object3D.parent;
     if (!camera || !parent) return;
@@ -144,6 +153,27 @@ AFRAME.registerComponent("face-camera", {
       this.el.object3D.up,
     );
     this.el.object3D.quaternion.setFromRotationMatrix(this.lookAtMatrix);
+
+    if (this.data.yawFollow) {
+      camera.getWorldDirection(this.viewDirection);
+      this.el.object3D.getWorldPosition(this.titleDirection);
+      this.titleDirection.sub(this.cameraWorldPosition);
+      const viewYaw = Math.atan2(this.viewDirection.x, this.viewDirection.z);
+      const titleYaw = Math.atan2(this.titleDirection.x, this.titleDirection.z);
+      // Wrap at +/-180 degrees so crossing north never flips the title.
+      const difference = Math.atan2(
+        Math.sin(viewYaw - titleYaw),
+        Math.cos(viewYaw - titleYaw),
+      );
+      const limit = THREE.MathUtils.degToRad(this.data.maxYaw);
+      const target = THREE.MathUtils.clamp(
+        difference * this.data.yawFollow, -limit, limit,
+      );
+      this.followYaw += (target - this.followYaw) *
+        (1 - Math.exp(-Math.max(delta || 0, 0) / 150));
+      this.yawQuaternion.setFromAxisAngle(this.yawAxis, this.followYaw);
+      this.el.object3D.quaternion.multiply(this.yawQuaternion);
+    }
   },
 });
 
@@ -949,7 +979,7 @@ class HotspotManager {
     title.id = "3dtext";
     const position = sphericalToCartesian(250, 0, 15);
     title.setAttribute("position", position);
-    title.setAttribute("face-camera", "positiveZ: false");
+    title.setAttribute("face-camera", "positiveZ: false; yawFollow: 0.25; maxYaw: 12");
     const fallback = document.createElement("a-text");
     fallback.setAttribute("value", SPACE_TITLES[spaceId] || spaceId);
     fallback.setAttribute("align", "center");
