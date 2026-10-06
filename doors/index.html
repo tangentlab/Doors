@@ -187,7 +187,8 @@
         transform: translateX(-50%);
       }
 
-      #info-button {
+      #info-button,
+      #mute-button {
         position: absolute;
         top: max(1rem, env(safe-area-inset-top));
         right: max(1rem, env(safe-area-inset-right));
@@ -210,13 +211,29 @@
           transform 160ms ease;
       }
 
-      #info-button:hover {
+      #info-button {
+        right: calc(max(1rem, env(safe-area-inset-right)) + 3.25rem);
+      }
+
+      #mute-button svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+
+      #mute-button[aria-pressed="true"] .sound-waves,
+      #mute-button[aria-pressed="false"] .sound-off {
+        display: none;
+      }
+
+      #info-button:hover,
+      #mute-button:hover {
         border-color: #d6deae;
         background: rgba(38, 47, 38, 0.92);
         transform: scale(1.05);
       }
 
       #info-button:focus-visible,
+      #mute-button:focus-visible,
       #info-close:focus-visible {
         outline: 3px solid #d6deae;
         outline-offset: 3px;
@@ -349,6 +366,13 @@
         </select>
       </div>
       <output id="direction-debug" aria-label="Viewing direction" hidden></output>
+      <button id="mute-button" type="button" aria-label="Mute audio" aria-pressed="false" title="Mute audio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4Z" />
+          <path class="sound-waves" d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" />
+          <path class="sound-off" d="m16 9 6 6m0-6-6 6" />
+        </svg>
+      </button>
       <button
         id="info-button"
         type="button"
