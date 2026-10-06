@@ -28,12 +28,14 @@ const SPACE_TITLES = {
 };
 
 const SPACE_TEXT_MODELS = {
-  entrance: "Entry_Sep30.gltf",
-  funnel: "FUNNEL_Sep30.gltf",
-  heart: "Heart_Sep30.gltf",
-  lookout: "Lookout_Sep30.gltf",
-  bottoms: "Bottoms_Sep30.gltf",
+  entrance: "Entry_Green.gltf",
+  funnel: "Funnel_Green.gltf",
+  heart: "Heart_Green.gltf",
+  lookout: "Lookout_Green.gltf",
+  bottoms: "Bottoms_Green.gltf",
 };
+
+const SPACE_TEXT_COLOR = "#32a852";
 
 // Fit the authored letters to a consistent world-space height.
 AFRAME.registerComponent("environment-model", {
@@ -983,6 +985,7 @@ class HotspotManager {
     const fallback = document.createElement("a-text");
     fallback.setAttribute("value", SPACE_TITLES[spaceId] || spaceId);
     fallback.setAttribute("align", "center");
+    fallback.setAttribute("color", SPACE_TEXT_COLOR);
     fallback.setAttribute("width", "100");
     fallback.setAttribute("side", "double");
     fallback.setAttribute("raycast-pass-through", "");
@@ -993,7 +996,7 @@ class HotspotManager {
       const model = document.createElement("a-entity");
       model.setAttribute("environment-model", "");
       model.setAttribute("raycast-pass-through", "");
-      model.setAttribute("gltf-model", `url(../media/models/GLTF_SEP30/${file})`);
+      model.setAttribute("gltf-model", `url(../media/models/GREEN_ttiles_Oct2/${file})`);
       title.appendChild(model);
     }
     // Anchor to the panorama so the title stays in the environment while panning.
