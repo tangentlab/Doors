@@ -426,6 +426,8 @@ class HotspotManager {
     this.lastJourney = null;
     /** @type {HTMLAudioElement | null} currently playing hotspot track (concat/solstice/duet) */
     this.currentHotspotAudio = null;
+    this.isAudioMuted = false;
+    this.muteButton = document.querySelector("#mute-button");
     this.infoButton = document.querySelector("#info-button");
     this.infoBackdrop = document.querySelector("#info-panel-backdrop");
     this.infoPanel = document.querySelector("#info-panel");
@@ -459,10 +461,38 @@ class HotspotManager {
     this.setupVideoChangeListener();
     this.setupSeasonSelector();
     this.setupInfoPanel();
+    this.setupMuteButton();
     if (DIRECTION_DEBUG_ENABLED && this.directionDebug) {
       this.directionDebug.hidden = false;
       this.updateDirectionDebug();
     }
+  }
+
+  setupMuteButton() {
+    this.muteButton?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.isAudioMuted = !this.isAudioMuted;
+      document.querySelectorAll("audio").forEach((audio) => {
+        audio.muted = this.isAudioMuted;
+      });
+      // A-Frame sound components use Web Audio rather than the asset's mute flag.
+      const listener = this.scene.audioListener;
+      if (listener) {
+        if (this.isAudioMuted) {
+          this.unmutedMasterVolume = listener.getMasterVolume();
+        }
+        listener.setMasterVolume(this.isAudioMuted ? 0 : (this.unmutedMasterVolume ?? 1));
+      }
+      const label = this.isAudioMuted ? "Unmute audio" : "Mute audio";
+      this.muteButton.setAttribute("aria-pressed", String(this.isAudioMuted));
+      this.muteButton.setAttribute("aria-label", label);
+      this.muteButton.title = label;
+      if (!this.isAudioMuted && this.currentHotspotAudio) {
+        this.currentHotspotAudio.play().catch((error) => {
+          console.warn("Space audio play failed:", error);
+        });
+      }
+    });
   }
 
   setupSeasonSelector() {
@@ -1030,6 +1060,7 @@ class HotspotManager {
     const audioEl = document.querySelector(audioSelector);
     if (audioEl && typeof audioEl.play === "function") {
       try {
+        audioEl.muted = this.isAudioMuted;
         audioEl.currentTime = 0;
         audioEl.play();
         this.currentHotspotAudio = audioEl;
