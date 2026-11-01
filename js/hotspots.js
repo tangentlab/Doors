@@ -28,11 +28,11 @@ const SPACE_TITLES = {
 };
 
 const SPACE_TEXT_MODELS = {
-  entrance: "Entry.gltf",
-  funnel: "Funnel.gltf",
-  heart: "Heart.gltf",
-  lookout: "Lookout.gltf",
-  bottoms: "Bottoms.gltf",
+  entrance: "Entry_centered.gltf",
+  funnel: "Funnel_Centered.gltf",
+  heart: "Heart_Centered.gltf",
+  lookout: "POV_Centered.gltf",
+  bottoms: "Bottoms_Centered.gltf",
 };
 
 const SPACE_TEXT_COLOR = "#32a852";
@@ -1112,7 +1112,7 @@ class HotspotManager {
       const model = document.createElement("a-entity");
       model.setAttribute("environment-model", "");
       model.setAttribute("raycast-pass-through", "");
-      model.setAttribute("gltf-model", `url(../media/models/GLTF_Oct19/${file})`);
+      model.setAttribute("gltf-model", `url(../media/models/GLTF_Oct22/${file})`);
       title.appendChild(model);
     }
     // Anchor to the panorama so the title stays in the environment while panning.
