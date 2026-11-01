@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Doors Testing</title>
     <meta name="description" content="Video - A-Frame" />
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
@@ -16,7 +17,7 @@
 
     <script src="../js/play-on-click.js"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20261019-oct19-models"></script>
+    <script src="../js/hotspots.js?v=20261020-overlay-fade"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -74,12 +75,14 @@
           <p id="info-panel-eyebrow">About this place</p>
           <h2 id="info-panel-heading">Entrance</h2>
           <p id="info-panel-description"></p>
+          <p id="overlay-video-status" role="status" hidden></p>
         </section>
       </div>
     </div>
     <div id="sphere-transition" aria-hidden="true"></div>
     <a-scene>
       <a-assets>
+        <video id="overlay-video" preload="none" muted loop playsinline crossorigin="anonymous"></video>
         <audio
           id="click-sound"
           src="https://cdn.aframe.io/360-image-gallery-boilerplate/audio/click.ogg"
@@ -252,6 +255,10 @@
         rotation="0 -90 0"
       >
       </a-videosphere>
+
+      <!-- Smaller than the landscape sphere, so it covers it only when revealed. -->
+      <a-videosphere id="overlay-video-sphere" src="#overlay-video"
+        radius="450" position="0 0 0" visible="false"></a-videosphere>
 
       <!-- Camera + Cursor. -->
       <a-camera wasd-controls-enabled="false" look-controls>

@@ -229,7 +229,7 @@ body.sphere-zoom-active a-scene canvas {
   inset: 0;
   display: grid;
   align-items: center;
-  justify-items: end;
+  justify-items: center;
   padding: 1rem;
   background: rgba(2, 4, 3, 0.42);
   opacity: 0;
@@ -244,21 +244,23 @@ body.sphere-zoom-active a-scene canvas {
 
 #info-panel {
   position: relative;
-  width: min(25rem, 100%);
+  box-sizing: border-box;
+  width: min(64rem, 90vw);
+  min-height: min(32rem, 75dvh);
   max-height: calc(100vh - 2rem);
-  padding: 1.5rem;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
   overflow-y: auto;
   border: 1px solid rgba(214, 222, 174, 0.5);
   border-radius: 0.75rem;
   background: rgba(12, 17, 13, 0.94);
   box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.45);
   color: #f3f1e9;
-  transform: translateX(1rem);
+  transform: translateY(1rem);
   transition: transform 180ms ease;
 }
 
 #info-panel-backdrop.is-open #info-panel {
-  transform: translateX(0);
+  transform: translateY(0);
 }
 
 #info-panel-heading {
@@ -297,12 +299,12 @@ body.sphere-zoom-active a-scene canvas {
 
 @media (max-width: 35rem) {
   #info-panel-backdrop {
-    align-items: end;
+    align-items: center;
   }
 
   #info-panel {
     width: 100%;
-    max-height: 70vh;
+    max-height: calc(100dvh - 2rem);
     transform: translateY(1rem);
   }
 
@@ -318,3 +320,29 @@ body.sphere-zoom-active a-scene canvas {
     transition: none;
   }
 }
+
+/* Keep the scene available for panning while the inner video sphere is open. */
+#info-panel-backdrop.is-video-overlay {
+  align-items: end;
+  background: transparent;
+  pointer-events: none;
+}
+
+.is-video-overlay #info-panel {
+  width: min(48rem, 100%);
+  min-height: 0;
+  max-height: 35dvh;
+  padding: 1.25rem 3.5rem 1.25rem 1.5rem;
+  pointer-events: auto;
+}
+
+.is-video-overlay #info-panel-heading {
+  font-size: 1.5rem;
+}
+
+#overlay-video-status {
+  color: #d6deae;
+  font: 400 0.95rem/1.5 system-ui, sans-serif;
+}
+
+#info-panel-backdrop[hidden] { display: none; }

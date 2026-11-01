@@ -249,3 +249,26 @@ Primary design reference:
 The source image currently lives outside the repository. If it is intended to
 remain a durable project reference, add an approved copy under a repository
 documentation or design-assets directory and update this link.
+
+## Information overlays (October 20, 2026)
+
+General info hotspots open a centered, responsive HTML dialog up to 64rem wide.
+Add an optional `video` object to an entry in `HOTSPOT_LAYOUTS.infoHotspots` to
+reveal an inner 360° video sphere instead:
+
+```js
+video: {
+  src: "../media/path/to/equirectangular-video.mp4",
+  orientation: 0, // yaw in degrees
+}
+```
+
+The Funnel “Spring in Funnel” info hotspot is a working example using existing
+Spring footage; replace its source with the intended overlay footage. Other info
+hotspots continue opening the general dialog. The inner sphere uses a dedicated,
+muted, looping video element, so it does not change the selected space or season.
+Visitors can pan while it is open. A compact caption and close button remain
+visible; Escape also closes it. Landscape hotspots and titles are hidden during
+playback, ambient audio pauses, and closing restores them. Loading/playback errors
+are shown in the caption. This HTML control pattern targets desktop and mobile;
+immersive headset controls have not been validated.
