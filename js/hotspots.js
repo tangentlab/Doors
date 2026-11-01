@@ -107,6 +107,7 @@ const SPACE_INFO = {
 
 // Adjust this value to make the sphere-to-sphere blink faster or slower.
 const SPHERE_TRANSITION_DURATION_MS = 1700;
+const OVERLAY_FADE_DURATION_MS = 900;
 // Change to false to disable the zoom while keeping the iris transition.
 const SPHERE_TRANSITION_ZOOM_ENABLED = true;
 // Change to false to remove the compass debugging label.
@@ -281,6 +282,15 @@ const HOTSPOT_LAYOUTS = {
     ],
     infoHotspots: [
       {
+        id: "funnel-info-inner-sphere",
+        azimuth: 135,
+        elevation: 5,
+        title: "Spring in Funnel",
+        description: "Look around to explore this video overlay. Close it to return to your current season.",
+        // Replace with the dedicated 360° overlay footage when available.
+        video: { src: "../media/spring/Beltane Stitches/2_Funnel Beltane.mp4", orientation: 0 },
+      },
+      {
         id: "funnel-info-sound-field",
         azimuth: 180,
         elevation: 5,
@@ -435,6 +445,9 @@ class HotspotManager {
     this.infoEyebrow = document.querySelector("#info-panel-eyebrow");
     this.infoHeading = document.querySelector("#info-panel-heading");
     this.infoDescription = document.querySelector("#info-panel-description");
+    this.overlaySphere = document.querySelector("#overlay-video-sphere");
+    this.overlayVideo = document.querySelector("#overlay-video");
+    this.overlayStatus = document.querySelector("#overlay-video-status");
     this.directionDebug = document.querySelector("#direction-debug");
     this.seasonSelect = document.querySelector("#season-select");
     this.viewDirection = new THREE.Vector3();
@@ -554,7 +567,8 @@ class HotspotManager {
   openInfoPanel(content = null) {
     if (!this.infoBackdrop) return;
     window.clearTimeout(this.infoCloseTimer);
-    this.lastInfoFocus = document.activeElement;
+    if (!this.isInfoPanelOpen()) this.lastInfoFocus = document.activeElement;
+    this.closeVideoOverlay();
     if (content) {
       if (this.infoEyebrow) {
         this.infoEyebrow.textContent = content.eyebrow || "Point of interest";
@@ -568,7 +582,7 @@ class HotspotManager {
     }
 
     this.infoBackdrop.hidden = false;
-    window.requestAnimationFrame(() => {
+    this.infoOpenFrame = window.requestAnimationFrame(() => {
       this.infoBackdrop.classList.add("is-open");
       this.infoButton?.setAttribute("aria-expanded", "true");
       this.infoCloseButton?.focus();
@@ -581,10 +595,81 @@ class HotspotManager {
       title: hotspot.title,
       description: hotspot.description,
     });
+    if (hotspot.video) this.openVideoOverlay(hotspot.video);
+  }
+
+  openVideoOverlay(video) {
+    if (!this.overlayVideo || !this.overlaySphere) return;
+    this.infoBackdrop.classList.add("is-video-overlay");
+    this.overlayStatus.hidden = false;
+    this.overlayStatus.textContent = "Loading video…";
+    let revealed = false;
+    this.overlayVideo.onplaying = () => {
+      this.overlayStatus.hidden = true;
+      if (revealed) return;
+      revealed = true;
+      // Wait for playback before revealing the texture, avoiding a black flash.
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      this.overlaySphere.setAttribute("visible", true);
+      this.overlaySphere.setAttribute("animation__overlayfade", {
+        property: "material.opacity",
+        from: 0,
+        to: 1,
+        dur: reducedMotion ? 0 : OVERLAY_FADE_DURATION_MS,
+        easing: "easeInOutSine",
+      });
+    };
+    this.overlayVideo.onerror = () => {
+      this.overlayStatus.hidden = false;
+      this.overlayStatus.textContent = "This video could not be loaded. Close to return to the landscape.";
+    };
+    this.overlayVideo.src = video.src;
+    this.overlaySphere.setAttribute("rotation", `0 ${video.orientation ?? 0} 0`);
+    this.overlaySphere.removeAttribute("animation__overlayfade");
+    this.overlaySphere.setAttribute("material", "transparent", true);
+    this.overlaySphere.setAttribute("material", "opacity", 0);
+    this.overlaySphere.setAttribute("visible", false);
+    this.hotspotsContainer.setAttribute("visible", false);
+    this.hotspotsContainer.querySelectorAll(".clickable").forEach((el) => {
+      el.classList.remove("clickable");
+      el.classList.add("overlay-disabled");
+    });
+    this.environmentTitle?.setAttribute("visible", false);
+    this.overlayPausedAudio = this.currentHotspotAudio && !this.currentHotspotAudio.paused
+      ? this.currentHotspotAudio : null;
+    this.overlayPausedAudio?.pause();
+    this.overlayVideo.play().catch(() => {
+      this.overlayStatus.hidden = false;
+      this.overlayStatus.textContent = "Video playback is unavailable. Close to return to the landscape.";
+    });
+  }
+
+  closeVideoOverlay() {
+    if (!this.infoBackdrop?.classList.contains("is-video-overlay")) return;
+    this.infoBackdrop.classList.remove("is-video-overlay");
+    this.overlayVideo.pause();
+    this.overlayVideo.onplaying = null;
+    this.overlayVideo.onerror = null;
+    this.overlayVideo.removeAttribute("src");
+    this.overlayVideo.load();
+    this.overlaySphere.removeAttribute("animation__overlayfade");
+    this.overlaySphere.setAttribute("visible", false);
+    this.overlaySphere.setAttribute("material", "opacity", 0);
+    this.overlayStatus.hidden = true;
+    this.hotspotsContainer.setAttribute("visible", true);
+    this.hotspotsContainer.querySelectorAll(".overlay-disabled").forEach((el) => {
+      el.classList.remove("overlay-disabled");
+      el.classList.add("clickable");
+    });
+    this.environmentTitle?.setAttribute("visible", true);
+    this.overlayPausedAudio?.play().catch(() => {});
+    this.overlayPausedAudio = null;
   }
 
   closeInfoPanel({ restoreFocus = true } = {}) {
     if (!this.infoBackdrop) return;
+    window.cancelAnimationFrame(this.infoOpenFrame);
+    this.closeVideoOverlay();
     this.infoBackdrop.classList.remove("is-open");
     this.infoButton?.setAttribute("aria-expanded", "false");
 
@@ -673,6 +758,7 @@ class HotspotManager {
     const transition = document.querySelector("#sphere-transition");
     if (!asset || !this.videoSphere) return;
 
+    if (this.isInfoPanelOpen()) this.closeInfoPanel({ restoreFocus: false });
     this.isTransitioning = true;
     this.hotspotsContainer.setAttribute("visible", false);
     transition?.classList.add("is-active");
@@ -1093,6 +1179,7 @@ class HotspotManager {
     const transition = document.querySelector("#sphere-transition");
     if (!videoSphere || !newVideo) return;
 
+    if (this.isInfoPanelOpen()) this.closeInfoPanel({ restoreFocus: false });
     this.isTransitioning = true;
     this.hotspotsContainer.setAttribute("visible", false);
     transition?.style.setProperty(
