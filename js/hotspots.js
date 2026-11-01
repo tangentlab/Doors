@@ -35,7 +35,14 @@ const SPACE_TEXT_MODELS = {
   bottoms: "Bottoms_Centered.gltf",
 };
 
+// Edit these settings to change the 3D titles' appearance.
 const SPACE_TEXT_COLOR = "#32a852";
+const SPACE_TEXT_HEIGHT = 34;
+const SPACE_TEXT_MATERIAL = {
+  color: SPACE_TEXT_COLOR,
+  roughness: 0.65,
+  metalness: 0,
+};
 
 // Fit the authored letters to a consistent world-space height.
 AFRAME.registerComponent("environment-model", {
@@ -43,12 +50,15 @@ AFRAME.registerComponent("environment-model", {
     this.onLoaded = () => {
       const model = this.el.getObject3D("mesh");
       if (!model) return;
+      this.textMaterial?.dispose();
+      this.textMaterial = new THREE.MeshStandardMaterial(SPACE_TEXT_MATERIAL);
       // Measure in model coordinates, independent of the panorama's rotation.
       model.updateWorldMatrix(true, true);
       const inverse = model.matrixWorld.clone().invert();
       const bounds = new THREE.Box3();
       model.traverse((object) => {
         if (!object.isMesh) return;
+        object.material = this.textMaterial;
         object.geometry.computeBoundingBox();
         const transform = new THREE.Matrix4().multiplyMatrices(inverse, object.matrixWorld);
         bounds.union(object.geometry.boundingBox.clone().applyMatrix4(transform));
@@ -56,7 +66,7 @@ AFRAME.registerComponent("environment-model", {
       const size = bounds.getSize(new THREE.Vector3());
       if (!Number.isFinite(size.y) || size.y <= 0) return;
       const center = bounds.getCenter(new THREE.Vector3());
-      const scale = 17 / size.y;
+      const scale = SPACE_TEXT_HEIGHT / size.y;
       model.scale.setScalar(scale);
       model.position.copy(center).multiplyScalar(-scale);
       this.el.parentElement.querySelector("a-text")?.setAttribute("visible", false);
@@ -65,6 +75,7 @@ AFRAME.registerComponent("environment-model", {
   },
   remove() {
     this.el.removeEventListener("model-loaded", this.onLoaded);
+    this.textMaterial?.dispose();
   },
 });
 
@@ -1102,7 +1113,7 @@ class HotspotManager {
     fallback.setAttribute("value", SPACE_TITLES[spaceId] || spaceId);
     fallback.setAttribute("align", "center");
     fallback.setAttribute("color", SPACE_TEXT_COLOR);
-    fallback.setAttribute("width", "100");
+    fallback.setAttribute("width", "200");
     fallback.setAttribute("side", "double");
     fallback.setAttribute("raycast-pass-through", "");
     title.appendChild(fallback);
