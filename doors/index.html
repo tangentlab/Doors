@@ -13,11 +13,12 @@
     <!-- <script src="https://unpkg.com/aframe-animation-component@5.x.x/dist/aframe-animation-component.min.js"></script> -->
     <!-- <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script> -->
 
-    <link rel="stylesheet" href="../css/doors.css" />
+    <link rel="stylesheet" href="../css/doors.css?v=20261101-loading" />
 
-    <script src="../js/play-on-click.js"></script>
+    <script src="../js/play-on-click.js?v=20261101-playback"></script>
     <script src="../js/hide-on-play.js"></script>
-    <script src="../js/hotspots.js?v=20261020-overlay-fade"></script>
+    <script src="../js/video-loading.js?v=20261101-loading"></script>
+    <script src="../js/hotspots.js?v=20261101-loading"></script>
 
     <script id="link" type="text/html">
       <a-entity
@@ -79,6 +80,11 @@
         </section>
       </div>
     </div>
+    <div id="video-loading" role="status" aria-live="polite" hidden>
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span id="video-loading-message">Loading landscape…</span>
+      <button id="video-loading-action" type="button" hidden>Retry</button>
+    </div>
     <div id="sphere-transition" aria-hidden="true"></div>
     <a-scene>
       <a-assets>
@@ -109,50 +115,51 @@
           autoplay
           muted
           loop
+          playsinline
           crossorigin="anonymous"
         ></video>
         <video
           id="funnel"
-          preload="auto"
+          preload="none"
           src="../media/winter/02_Funnel_11-25.mp4"
           width="160"
           height="90"
-          autoplay
           muted
           loop
+          playsinline
           crossorigin="anonymous"
         ></video>
         <video
           id="heart"
-          preload="auto"
+          preload="none"
           src="../media/winter/03_Heart_11-25.mp4"
           width="160"
           height="90"
-          autoplay
           muted
           loop
+          playsinline
           crossorigin="anonymous"
         ></video>
         <video
           id="lookout"
-          preload="auto"
+          preload="none"
           src="../media/winter/04_Lookout_11-25.mp4"
           width="160"
           height="90"
-          autoplay
           muted
           loop
+          playsinline
           crossorigin="anonymous"
         ></video>
         <video
           id="bottoms"
-          preload="auto"
+          preload="none"
           src="../media/winter/05_Bottoms_11-25.mp4"
           width="160"
           height="90"
-          autoplay
           muted
           loop
+          playsinline
           crossorigin="anonymous"
         ></video>
         <video
@@ -250,6 +257,7 @@
       <a-videosphere
         src="#entrance"
         id="video-sphere"
+        play-on-click
         radius="500"
         position="0 0 0"
         rotation="0 -90 0"
