@@ -771,6 +771,11 @@ class HotspotManager {
 
     if (this.isInfoPanelOpen()) this.closeInfoPanel({ restoreFocus: false });
     this.isTransitioning = true;
+    if (!(await window.landscapePlayback.prepare(asset, () => this.changeSeason(season)))) {
+      this.isTransitioning = false;
+      if (this.seasonSelect) this.seasonSelect.value = this.currentSeason;
+      return;
+    }
     this.hotspotsContainer.setAttribute("visible", false);
     transition?.classList.add("is-active");
     const reducedMotion = window.matchMedia(
@@ -1192,6 +1197,10 @@ class HotspotManager {
 
     if (this.isInfoPanelOpen()) this.closeInfoPanel({ restoreFocus: false });
     this.isTransitioning = true;
+    if (!(await window.landscapePlayback.prepare(newVideo, () => this.changeVideo(videoId)))) {
+      this.isTransitioning = false;
+      return;
+    }
     this.hotspotsContainer.setAttribute("visible", false);
     transition?.style.setProperty(
       "--sphere-transition-duration",
@@ -1218,6 +1227,9 @@ class HotspotManager {
       window.setTimeout(resolve, transitionDuration / 2),
     );
     videoSphere.setAttribute("src", `#${assetId}`);
+    document.querySelectorAll("a-assets video").forEach((video) => {
+      if (video !== newVideo) video.pause();
+    });
     this.setViewHeading(arrivalHeading);
     this.lastJourney = isReturnJourney
       ? null
@@ -1293,12 +1305,7 @@ class HotspotManager {
 document.addEventListener("DOMContentLoaded", () => {
   window.hotspotManager = new HotspotManager("a-scene");
 
-  setTimeout(function () {
-    var entranceVideo = document.getElementById("entrance");
-    if (entranceVideo) {
-      entranceVideo.play().catch(function (error) {
-        console.log("Autoplay prevented:", error);
-      });
-    }
-  }, 500);
+  const entrance = document.getElementById("entrance");
+  const start = () => window.landscapePlayback.prepare(entrance, start);
+  if (entrance) start();
 });

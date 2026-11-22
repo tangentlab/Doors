@@ -13,7 +13,9 @@ AFRAME.registerComponent('play-on-click', {
     var videoEl = this.el.getAttribute('material').src;
     if (!videoEl) { return; }
     this.el.object3D.visible = true;
-    videoEl.play();
+    videoEl.play().catch(function (error) {
+      console.warn('Video playback could not start:', error);
+    });
   }
 });
 
